@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  Math.swift
 //
 //  Copyright (c) 2020 Daniel Murfin
 //
@@ -22,10 +22,31 @@
 //  THE SOFTWARE.
 //
 
-import XCTest
+import Foundation
 
-import OTPKitTests
+/**
+ Math
+  
+ Math functions.
 
-var tests = [XCTestCaseEntry]()
-tests += OTPKitTests.allTests()
-XCTMain(tests)
+*/
+
+struct Math {
+
+    /**
+     Calculates the arithmetic mean of a collection of integer values.
+     
+     - Parameters:
+        - values: The collection of integers.
+     
+     - Precondition: The collection must not be empty.
+     
+     - Returns: The arithmetic mean of the collection of integers.
+          
+    */
+    static func mean<T>(of values: [T]) -> T where T: BinaryInteger {
+        precondition(!values.isEmpty, "Collection cannot be empty.")
+        return values.reduce(0, +) / T(values.count)
+    }
+
+}

@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  Date+Extension.swift
 //
 //  Copyright (c) 2020 Daniel Murfin
 //
@@ -22,10 +22,46 @@
 //  THE SOFTWARE.
 //
 
-import XCTest
+import Foundation
 
-import OTPKitTests
+/**
+ Date Extension
+ 
+ Extensions to `Date`.
 
-var tests = [XCTestCaseEntry]()
-tests += OTPKitTests.allTests()
-XCTMain(tests)
+*/
+
+internal extension Date {
+    
+    /**
+     Creates a string from the date showing hours, minutes, seconds and milliseconds.
+
+     - Returns: A string of the date.
+
+    */
+    func logDateFormatter() -> String {
+        return DateFormatter.LogDateFormatter.string(from: self)
+    }
+    
+}
+
+/**
+ Date Formatter Extension
+ 
+ Extensions to `DateFormatter`.
+
+*/
+
+internal extension DateFormatter {
+    
+    /**
+     Creates a static date formatter showing hours, minutes, seconds and milliseconds.
+
+    */
+    fileprivate static let LogDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
+    }()
+    
+}

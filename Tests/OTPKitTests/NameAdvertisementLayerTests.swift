@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  NameAdvertisementTests.swift
 //
 //  Copyright (c) 2020 Daniel Murfin
 //
@@ -23,9 +23,51 @@
 //
 
 import XCTest
+@testable import OTPKit
 
-import OTPKitTests
+/**
+ name Advertisement Layer Tests
+*/
 
-var tests = [XCTestCaseEntry]()
-tests += OTPKitTests.allTests()
-XCTMain(tests)
+final class NameAdvertisementLayerTests: XCTestCase {
+    
+    /**
+     Short data.
+    */
+    func testShortData() {
+        
+        let data = Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+
+        XCTAssertThrowsError(try NameAdvertismentLayer.parse(fromData: data))
+        
+    }
+    
+    /**
+     Invalid vectors should be rejected.
+    */
+    func testInvalidVector() {
+        
+        let data = Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+
+        XCTAssertThrowsError(try NameAdvertismentLayer.parse(fromData: data))
+        
+    }
+    
+    /**
+     Invalid lengths should be rejected.
+    */
+    func testInvalidLength() {
+        
+        let data = Data([0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+
+        XCTAssertThrowsError(try NameAdvertismentLayer.parse(fromData: data))
+        
+    }
+    
+    static var allTests = [
+        ("testShortData", testShortData),
+        ("testInvalidVector", testInvalidVector),
+        ("testInvalidLength", testInvalidLength),
+    ]
+
+}

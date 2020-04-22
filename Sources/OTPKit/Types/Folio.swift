@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  Folio.swift
 //
 //  Copyright (c) 2020 Daniel Murfin
 //
@@ -22,10 +22,41 @@
 //  THE SOFTWARE.
 //
 
-import XCTest
+import Foundation
 
-import OTPKitTests
+/**
+ Folio
+  
+ A folio stores a snapshot of transform information received across one or more messages from an `OTPProducer`.
 
-var tests = [XCTestCaseEntry]()
-tests += OTPKitTests.allTests()
-XCTMain(tests)
+*/
+
+struct Folio {
+
+    /// The `FolioNumber` which identifies this folio.
+    var number: FolioNumber
+    
+    /// An array of page numbers which have been received for this folio.
+    var pages: [Page]
+    
+    /// The last page number expected to be received for this folio.
+    var lastPage: Page
+    
+    /// Whether this folio includes all `OTPPoint`s being transmitted for a particular `OTPProducer`.
+    var fullPointSet: Bool
+    
+    /// An array of `ConsumerPoint`s which have been received from an `OTPProducer` with the same folio number.
+    var points: [ConsumerPoint]
+    
+    /**
+     Determines if this Folio is considered complete (has a full set of pages).
+     
+     - Returns: Whether this Folio has a full set of pages.
+     
+    */
+    func isComplete() -> Bool {
+        pages.count == lastPage + 1
+    }
+    
+}
+

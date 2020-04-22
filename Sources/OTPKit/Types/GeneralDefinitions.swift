@@ -1,5 +1,5 @@
 //
-//  LinuxMain.swift
+//  GeneralDefinitons.swift
 //
 //  Copyright (c) 2020 Daniel Murfin
 //
@@ -22,10 +22,12 @@
 //  THE SOFTWARE.
 //
 
-import XCTest
+import Foundation
 
-import OTPKitTests
+/// A type used for timing intervals specified in milliseconds.
+typealias Milliseconds = Int
 
-var tests = [XCTestCaseEntry]()
-tests += OTPKitTests.allTests()
-XCTMain(tests)
+/// A type used for timestamps in `TransformLayer`s and `PointLayer`s.
+typealias Timestamp = UInt64
+
+
