@@ -14,7 +14,7 @@ Initialized Consumers may have their name, observed systems and supported module
 
 Example usage:
 
-``` 
+``` swift
    
    // create a new dispatch queue to receive delegate notifications
    let queue = DispatchQueue(label: "com.danielmurfin.OTPKit.consumerQueue")

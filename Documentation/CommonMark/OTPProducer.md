@@ -14,7 +14,7 @@ Initialized Producers may have their name and transmitted points/modules changed
 
 Example usage:
 
-``` 
+``` swift
    
    // create a new dispatch queue to receive delegate notifications
    let queue = DispatchQueue(label: "com.danielmurfin.OTPKit.producerQueue")

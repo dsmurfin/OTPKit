@@ -12,7 +12,7 @@ This data structure contains the current rotation of the Point using intrinsic E
 
 Example usage:
 
-``` 
+``` swift
 
    // initialize a module at x = 45°, y = 0°, z = 45°
    let module = OTPModuleRotation(x: 45000000, y: 0, z: 45000000)

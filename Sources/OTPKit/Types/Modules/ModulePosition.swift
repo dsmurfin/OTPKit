@@ -33,7 +33,7 @@ import Foundation
 
  Example usage:
  
- ```
+ ``` swift
 
     // initialize a module at x = 0.002m, y = 1m, z = 2m
     let module = OTPModulePosition(x: 2000, y: 1000000, z: 2000000, scaling: .μm)

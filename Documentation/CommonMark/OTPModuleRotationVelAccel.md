@@ -14,7 +14,7 @@ This module supports velocities as low as 0.001 degrees/s and as high as 1000 re
 
 Example usage:
 
-``` 
+``` swift
 
    // initialize a module at vX = 0°/s, vY = 0°/s, vZ = 15°/s and aX = 0°/s², aY = 0°/s², aZ = 5°/s²
    let module = OTPModuleRotationVelAccel(vX: 0, vY: 0, vZ: 15000, aX: 0, aY: 0, aZ: 5000)

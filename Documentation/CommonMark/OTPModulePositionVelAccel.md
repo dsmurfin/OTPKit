@@ -12,7 +12,7 @@ This data structure contains the positional velocity and acceleration of a Point
 
 Example usage:
 
-``` 
+``` swift
 
    // initialize a module at vX = 0.5m/s, vY = 0m/s, vZ = 0m/s and aX = 0.05m/s², aY = 0m/s², aZ = 0m/s²
    let module = OTPModulePositionVelAccel(vX: 500000, vY: 0, vZ: 0, aX: 50000, aY: 0, aZ: 0)

@@ -36,7 +36,7 @@ import CocoaAsyncSocket
  
  Example usage:
  
- ```
+ ``` swift
     
     // create a new dispatch queue to receive delegate notifications
     let queue = DispatchQueue(label: "com.danielmurfin.OTPKit.consumerQueue")

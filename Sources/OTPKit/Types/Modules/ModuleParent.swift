@@ -33,7 +33,7 @@ import Foundation
  
  Example usage:
  
- ```
+ ``` swift
 
     do {
         

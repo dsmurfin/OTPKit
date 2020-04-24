@@ -14,7 +14,7 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-Requires Swift 5.2
+Requires Swift 5.2  
 macOS 10.14+, iOS 10+
 
 ### Installing
@@ -23,20 +23,16 @@ macOS 10.14+, iOS 10+
 
 To add the package dependency to your Xcode project, select File > Swift Packages > Add Package Dependency and enter the repository URL:
 
-```
-"https://github.com/dsmurfin/OTPKit"
-
+``` "https://github.com/dsmurfin/OTPKit"
 ```
 
 #### Swift Package Manager
 
 Simply add the package dependency to your Package.swift and depend on "OTPKit" in the necessary targets:
 
-```
-dependencies: [
+``` dependencies: [
 .package(url: "https://github.com/dsmurfin/OTPKit", from: "0.1.0")
 ]
-
 ```
 
 #### Manual
@@ -48,7 +44,7 @@ Include OTPKit in your project by adding the source files directly, but you shou
 
 Import into your project files using Swift:
 
-```
+``` swift
 import OTPKit
 ```
 
@@ -56,14 +52,14 @@ import OTPKit
 
 Full documentation can be found in the project [wiki](https://github.com/dsmurfin/OTPKit/wiki).
 
-**OTPKit is fully Grand Central Dispatch (GCD) based and Thread-Safe**
+**OTPKit is fully Grand Central Dispatch (GCD) based and Thread-Safe**  
 It runs entirely within its own GCD DispatchQueue(s), and is completely thread-safe. Further, the delegate methods are all invoked asynchronously onto a DispatchQueue of your choosing. This means parallel operation of your OTP code, and your delegate/processing code.
 
 #### Producer
 
 Creating a Producer:
 
-```
+``` swift
 // create a new dispatch queue to receive delegate notifications
 let queue = DispatchQueue(label: "com.danielmurfin.OTPKit.producerQueue")
 
@@ -72,20 +68,18 @@ let uniqueIdentifier = UUID()
 
 // creates a new IPv4 only producer, which has a default priority of 120, and transmits changes every 10 ms
 let producer = OTPProducer(name: "My Producer", cid: uniqueIdentifier, ipMode: ipv4Only, interface: "en0", priority: 120, interval: 10, delegateQueue: Self.delegateQueue)
-   
 ```
 
 Starting a Producer:
 
-```
+``` swift
 // starts the producer transmitting network data
 producer.start()
-
 ```
 
 Adding a Point and Module to a Producer:
 
-```
+``` swift
 do {
    
     let address = try OTPAddress(1,2,10)
@@ -110,22 +104,20 @@ do {
     print(error)
 
 }
-
 ```
 
 Register to receive delegate notifications from Producer:
 
-```
+``` swift
 // request producer delegate notifications
 producer.setProducerDelegate(self)
-
 ```
 
 ### Consumer
 
 Creating a Consumer:
 
-```
+``` swift
 // create a new dispatch queue to receive delegate notifications
 let queue = DispatchQueue(label: "com.danielmurfin.OTPKit.consumerQueue")
 
@@ -137,22 +129,20 @@ let moduleTypes = [OTPModulePosition.self, OTPModuleParent.self]
 
 // creates a new IPv6 only consumer which observes systems 1 and 20 and receives delegate notifications a maximum of every 50 ms
 let consumer = OTPConsumer(name: "My Consumer", cid: uniqueIdentifier, ipMode: ipv6Only, interface: "en0", moduleTypes: moduleTypes, observedSystems: [1,20], delegateQueue: Self.delegateQueue, delegateInterval: 50)
-   
 ```
 
 Starting a Consumer:
 
-```
+``` swift
 // starts the consumer transmitting network data
 consumer.start()
 ```
 
 Register to receive delegate notifications from Producer:
 
-```
+``` swift
 // request consumer delegate notifications
 consumer.setConsumerDelegate(self)
-
 ```
 
 ## Deployment
