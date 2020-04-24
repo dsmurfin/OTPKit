@@ -198,21 +198,21 @@ public struct OTPModuleRotationVelAccel: OTPModule, Equatable {
         }
         
         // aX
-        guard let aX = data.toInt32(atOffset: Offset.vX.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Rotation Acceleration X", length: moduleLength) }
+        guard let aX = data.toInt32(atOffset: Offset.aX.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Rotation Acceleration X", length: moduleLength) }
         
         // Checkpoint: acceleration x
         guard (minPermitted...maxPermitted).contains(aX) else { throw ModuleLayerValidationError.invalidValue(field: "Acceleration X", value: "\(aX)", moduleIdentifier: Self.identifier, length: moduleLength)
         }
         
         // aY
-        guard let aY = data.toInt32(atOffset: Offset.vY.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Rotation Acceleration Y", length: moduleLength) }
+        guard let aY = data.toInt32(atOffset: Offset.aY.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Rotation Acceleration Y", length: moduleLength) }
         
         // Checkpoint: acceleration y
         guard (minPermitted...maxPermitted).contains(aY) else { throw ModuleLayerValidationError.invalidValue(field: "Acceleration Y", value: "\(aY)", moduleIdentifier: Self.identifier, length: moduleLength)
         }
         
         // aZ
-        guard let aZ = data.toInt32(atOffset: Offset.vZ.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Rotation Acceleration Z", length: moduleLength) }
+        guard let aZ = data.toInt32(atOffset: Offset.aZ.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Rotation Acceleration Z", length: moduleLength) }
         
         // Checkpoint: acceleration z
         guard (minPermitted...maxPermitted).contains(aZ) else { throw ModuleLayerValidationError.invalidValue(field: "Acceleration Z", value: "\(aZ)", moduleIdentifier: Self.identifier, length: moduleLength)

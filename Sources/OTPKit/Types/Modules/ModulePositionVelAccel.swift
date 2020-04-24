@@ -178,13 +178,13 @@ public struct OTPModulePositionVelAccel: OTPModule, Equatable {
         guard let vZ = data.toInt32(atOffset: Offset.vZ.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Velocity Z", length: moduleLength) }
         
         // aX
-        guard let aX = data.toInt32(atOffset: Offset.vX.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Acceleration X", length: moduleLength) }
+        guard let aX = data.toInt32(atOffset: Offset.aX.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Acceleration X", length: moduleLength) }
         
         // aY
-        guard let aY = data.toInt32(atOffset: Offset.vY.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Acceleration Y", length: moduleLength) }
+        guard let aY = data.toInt32(atOffset: Offset.aY.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Acceleration Y", length: moduleLength) }
         
         // aZ
-        guard let aZ = data.toInt32(atOffset: Offset.vZ.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Acceleration Z", length: moduleLength) }
+        guard let aZ = data.toInt32(atOffset: Offset.aZ.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "Position Acceleration Z", length: moduleLength) }
         
         return (module: Self(vX: vX, vY: vY, vZ: vZ, aX: aX, aY: aY, aZ: aZ), length: moduleLength)
         
