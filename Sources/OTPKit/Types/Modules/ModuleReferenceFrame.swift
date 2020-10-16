@@ -1,5 +1,5 @@
 //
-//  ModuleParent.swift
+//  ModuleReferenceFrame.swift
 //
 //  Copyright (c) 2020 Daniel Murfin
 //
@@ -25,11 +25,11 @@
 import Foundation
 
 /**
- OTP Module Parent
+ OTP Module Reference Frame
  
- Implements an OTP Standard Module of the Parent type and handles creation and parsing.
+ Implements an OTP Standard Module of the Reference Frame type and handles creation and parsing.
  
- This data structure contains the Address of the Parent of the Point and a flag which indicates whether other modules contained in this Point are relative to the Parent Point.
+ This data structure contains the Address of the Reference Frame of the Point. If a Reference Frame Module is included in a Point Layer, any other Modules included in this Point shall contain transform information relative to that of the Reference Frame.
  
  Example usage:
  
@@ -39,7 +39,7 @@ import Foundation
         
         let address = try OTPAddress(1,2,10)
  
-        let module = OTPModuleParent(address: address, relative: false)
+        let module = OTPModuleReferenceFrame(address: address, relative: false)
  
         // do something with module
  
@@ -51,10 +51,10 @@ import Foundation
 
 */
 
-public struct OTPModuleParent: OTPModule, Hashable {
+public struct OTPModuleReferenceFrame: OTPModule, Hashable {
 
     /// Uniquely identifies the module using an `OTPModuleIdentifier`.
-    public static let identifier: OTPModuleIdentifier = OTPModuleIdentifier(manufacturerID: ModuleLayer.ManufacturerID.esta.rawValue, moduleNumber: ModuleLayer.StandardModuleNumber.parent.rawValue)
+    public static let identifier: OTPModuleIdentifier = OTPModuleIdentifier(manufacturerID: ModuleLayer.ManufacturerID.esta.rawValue, moduleNumber: ModuleLayer.StandardModuleNumber.referenceFrame.rawValue)
 
     /// The size of the module's data in bytes.
     public static let dataLength: OTPPDULength = 8
@@ -63,46 +63,29 @@ public struct OTPModuleParent: OTPModule, Hashable {
     public static let moduleLength: OTPPDULength = dataLength + OTPPDULength(ModuleLayer.Offset.data.rawValue)
 
     /**
-     OTP Module Parent Data Offsets
+     OTP Module Reference Frame Data Offsets
 
      Enumerates the data offset for each field in this layer.
      
     */
     private enum Offset: Int {
-        case options = 0
-        case systemNumber = 1
-        case groupNumber = 2
-        case pointNumber = 4
+        case systemNumber = 0
+        case groupNumber = 1
+        case pointNumber = 3
     }
     
-    /**
-     OTP Module Parent Options Offsets
-     
-     Enumerates the bit offset for options flags.
-     
-    */
-    private enum OptionsOffset: Int {
-        
-        /// Whether the other `OTPModule`s contain relative values.
-        case relative = 7
-        
-    }
-    
-    /// Whether the other `OTPModule`s contained within the same `OTPPoint` have values which are relative to the parent point.
-    public var relative: Bool = false
-    
-    /// The `OTPSystemNumber ` of the parent of the `OTPPoint` containing this module.
+    /// The `OTPSystemNumber ` of the reference frame of the `OTPPoint` containing this module.
     public var systemNumber: OTPSystemNumber = 1
     
-    /// The `OTPGroupNumber ` of the parent of the `OTPPoint` containing this module.
+    /// The `OTPGroupNumber ` of the reference frame of the `OTPPoint` containing this module.
     public var groupNumber: OTPGroupNumber = 1
     
-    /// The `OTPPointNumber ` of the parent of the `OTPPoint` containing this module.
+    /// The `OTPPointNumber ` of the reference frame of the `OTPPoint` containing this module.
     public var pointNumber: OTPPointNumber = 1
     
     /// A human-readable log description of this module.
     public var logDescription: String {
-        "\(moduleIdentifier.logDescription) address: \(systemNumber)/\(groupNumber)/\(pointNumber) relative: \(relative)"
+        "\(moduleIdentifier.logDescription) address: \(systemNumber)/\(groupNumber)/\(pointNumber)"
     }
     
     /**
@@ -114,34 +97,30 @@ public struct OTPModuleParent: OTPModule, Hashable {
     }
     
     /**
-     Initializes an OTP Module Parent.
+     Initializes an OTP Module Reference Frame.
      
      - Parameters:
-        - systemNumber: The System Number of the Parent Point.
-        - groupNumber: The Group Number of the Parent Point.
-        - pointNumber: The Point Number of the Parent Point.
-        - relative: Whether this Points other Modules contain values relative to the Parent Point.
+        - systemNumber: The System Number of the Reference Frame Point.
+        - groupNumber: The Group Number of the Reference Frame Point.
+        - pointNumber: The Point Number of the Reference Frame Point.
      
      When using this internal initializer implementors must check the Address components are valid prior to initialization using `validSystemNumber()`, `validGroupNumber()` or `validPointNumber()`.
      
     */
-    init(systemNumber: OTPSystemNumber, groupNumber: OTPGroupNumber, pointNumber: OTPPointNumber, relative: Bool = false) {
-        self.relative = relative
+    init(systemNumber: OTPSystemNumber, groupNumber: OTPGroupNumber, pointNumber: OTPPointNumber) {
         self.systemNumber = systemNumber
         self.groupNumber = groupNumber
         self.pointNumber = pointNumber
     }
     
     /**
-     Initializes an OTP Module Parent.
+     Initializes an OTP Module Reference Frame.
      
      - Parameters:
-        - address: The Address of the Parent Point.
-        - relative: Whether this Points other Modules contain values relative to the Parent Point.
+        - address: The Address of the Reference Frame Point.
      
     */
-    public init(address: OTPAddress, relative: Bool = false) {
-        self.relative = relative
+    public init(address: OTPAddress) {
         self.systemNumber = address.systemNumber
         self.groupNumber = address.groupNumber
         self.pointNumber = address.pointNumber
@@ -156,9 +135,6 @@ public struct OTPModuleParent: OTPModule, Hashable {
     public func createAsData() -> Data {
 
         var data = Data()
-                
-        // relative
-        data.append(relative ? 0b10000000 : 0b00000000)
         
         // system number
         data.append(systemNumber.data)
@@ -174,23 +150,20 @@ public struct OTPModuleParent: OTPModule, Hashable {
     }
     
     /**
-     Attempts to create an `OTPModuleParent` from the data.
+     Attempts to create an `OTPModuleReferenceFrame` from the data.
      
      - Parameters:
         - data: The data to be parsed.
      
      - Throws: An error of type `ModuleLayerValidationError`.
      
-     - Returns: A valid `OTPModuleParent` and the length of the PDU.
+     - Returns: A valid `OTPModuleReferenceFrame` and the length of the PDU.
           
     */
     public static func parse(fromData data: Data) throws -> (module: Self, length: OTPPDULength) {
 
         // there must be a complete layer
         guard data.count >= dataLength else { throw ModuleLayerValidationError.insufficientLength }
-        
-        // options
-        guard let relative = data.toUInt8(atOffset: Offset.options.rawValue)?.optionsFlags[OptionsOffset.relative.rawValue] else { throw ModuleLayerValidationError.unableToParse(field: "Options", length: moduleLength) }
 
         // system number
         guard let systemNumber: SystemNumber = data.toUInt8(atOffset: Offset.systemNumber.rawValue) else { throw ModuleLayerValidationError.unableToParse(field: "System Number", length: moduleLength) }
@@ -222,7 +195,7 @@ public struct OTPModuleParent: OTPModule, Hashable {
             throw ModuleLayerValidationError.invalidValue(field: "Point Number", value: "\(pointNumber)", moduleIdentifier: Self.identifier, length: moduleLength)
         }
         
-        return (module: Self(systemNumber: systemNumber, groupNumber: groupNumber, pointNumber: pointNumber, relative: relative), length: moduleLength)
+        return (module: Self(systemNumber: systemNumber, groupNumber: groupNumber, pointNumber: pointNumber), length: moduleLength)
         
     }
     
@@ -247,16 +220,13 @@ public struct OTPModuleParent: OTPModule, Hashable {
             // all modules are equal
             return (module: theModules.first, excludePoint: false)
             
-        } else if theModules.contains(where: { $0.relative }) {
+        } else {
             
-            // the modules are not the same, and some say this point should be relative
-            // no sensible information can be derived for this point, so exclude it
+            // the modules are not the same and therefore no sensible information
+            // derived for this point (different reference frames), so exclude it
             return (module: nil, excludePoint: true)
             
         }
-        
-        // the parent isn't being used for relative values, so exclude this module
-        return (module: nil, excludePoint: false)
 
     }
     

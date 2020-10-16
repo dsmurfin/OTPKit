@@ -72,8 +72,8 @@ struct ModuleLayer {
         /// Standard scale data module.
         case scale = 0x0005
         
-        /// Standard parent data module.
-        case parent = 0x0006
+        /// Standard reference frame data module.
+        case referenceFrame = 0x0006
         
     }
     

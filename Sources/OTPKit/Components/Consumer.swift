@@ -44,8 +44,8 @@ import CocoaAsyncSocket
     // a unique identifier for this consumer
     let uniqueIdentifier = UUID()
  
-    // observe the position and parent modules
-    let moduleTypes = [OTPModulePosition.self, OTPModuleParent.self]
+    // observe the position and reference frame modules
+    let moduleTypes = [OTPModulePosition.self, OTPModuleReferenceFrame.self]
  
     // creates a new IPv6 only consumer which observes systems 1 and 20 and receives delegate notifications a maximum of every 50 ms
     let consumer = OTPConsumer(name: "My Consumer", cid: uniqueIdentifier, ipMode: ipv6Only, interface: "en0", moduleTypes: moduleTypes, observedSystems: [1,20], delegateQueue: Self.delegateQueue, delegateInterval: 50)

@@ -32,37 +32,33 @@ import XCTest
 final class ModuleTests: XCTestCase {
     
     /**
-     Creates a Module Parent.
+     Creates a Module Reference Frame.
     */
-    func testCreateModuleParent() {
+    func testCreateModuleReferenceFrame() {
         
-        let module1 = OTPModuleParent(systemNumber: 1, groupNumber: 2, pointNumber: 3)
+        let module1 = OTPModuleReferenceFrame(systemNumber: 1, groupNumber: 2, pointNumber: 3)
         
         XCTAssertEqual(module1.systemNumber, 1)
         XCTAssertEqual(module1.groupNumber, 2)
         XCTAssertEqual(module1.pointNumber, 3)
-        XCTAssertEqual(module1.relative, false)
 
-        let module2 = OTPModuleParent(systemNumber: 4, groupNumber: 5, pointNumber: 6, relative: true)
+        let module2 = OTPModuleReferenceFrame(systemNumber: 4, groupNumber: 5, pointNumber: 6)
         
         XCTAssertEqual(module2.systemNumber, 4)
         XCTAssertEqual(module2.groupNumber, 5)
         XCTAssertEqual(module2.pointNumber, 6)
-        XCTAssertEqual(module2.relative, true)
         
-        let module3 = OTPModuleParent(address: OTPAddress(system: 11, group: 12, point: 13))
+        let module3 = OTPModuleReferenceFrame(address: OTPAddress(system: 11, group: 12, point: 13))
         
         XCTAssertEqual(module3.systemNumber, 11)
         XCTAssertEqual(module3.groupNumber, 12)
         XCTAssertEqual(module3.pointNumber, 13)
-        XCTAssertEqual(module3.relative, false)
 
-        let module4 = OTPModuleParent(address: OTPAddress(system: 14, group: 15, point: 16), relative: true)
+        let module4 = OTPModuleReferenceFrame(address: OTPAddress(system: 14, group: 15, point: 16))
         
         XCTAssertEqual(module4.systemNumber, 14)
         XCTAssertEqual(module4.groupNumber, 15)
         XCTAssertEqual(module4.pointNumber, 16)
-        XCTAssertEqual(module4.relative, true)
         
     }
     
@@ -157,13 +153,13 @@ final class ModuleTests: XCTestCase {
     }
     
     /**
-     Module Parent Equatable
+     Module Reference Frame Equatable
     */
-    func testEquatableModuleParent() {
+    func testEquatableModuleReferenceFrame() {
         
-        let module1 = OTPModuleParent(systemNumber: 1, groupNumber: 2, pointNumber: 3)
-        let module2 = OTPModuleParent(systemNumber: 1, groupNumber: 2, pointNumber: 3)
-        let module3 = OTPModuleParent(systemNumber: 1, groupNumber: 2, pointNumber: 4)
+        let module1 = OTPModuleReferenceFrame(systemNumber: 1, groupNumber: 2, pointNumber: 3)
+        let module2 = OTPModuleReferenceFrame(systemNumber: 1, groupNumber: 2, pointNumber: 3)
+        let module3 = OTPModuleReferenceFrame(systemNumber: 1, groupNumber: 2, pointNumber: 4)
 
         XCTAssertEqual(module1, module2)
         XCTAssertNotEqual(module1, module3)
@@ -241,13 +237,13 @@ final class ModuleTests: XCTestCase {
     }
     
     static var allTests = [
-        ("testCreateModuleParent", testCreateModuleParent),
+        ("testCreateModuleReferenceFrame", testCreateModuleReferenceFrame),
         ("testCreateModulePosition", testCreateModulePosition),
         ("testCreateModulePositionVelocityAccel", testCreateModulePositionVelocityAccel),
         ("testCreateModuleRotation", testCreateModuleRotation),
         ("testCreateModuleRotationVelocityAccel", testCreateModuleRotationVelocityAccel),
         ("testCreateModuleScale", testCreateModuleScale),
-        ("testEquatableModuleParent", testEquatableModuleParent),
+        ("testEquatableModuleReferenceFrame", testEquatableModuleReferenceFrame),
         ("testEquatableModulePosition", testEquatableModulePosition),
         ("testEquatableModulePositionVelocityAccel", testEquatableModulePositionVelocityAccel),
         ("testEquatableModuleRotation", testEquatableModuleRotation),
