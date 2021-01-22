@@ -760,7 +760,7 @@ final public class OTPProducer: Component {
                 if let _ = self?.moduleAdvertisementTimer {
                     
                     // notify the debug delegate
-                    delegateQueue.async { self?.debugDelegate?.debugLog("Completed initial wait for module advertisement messages") }
+                    self?.delegateQueue.async { self?.debugDelegate?.debugLog("Completed initial wait for module advertisement messages") }
 
                     // start the transform heartbeat
                     self?.startTransform()
@@ -807,7 +807,7 @@ final public class OTPProducer: Component {
                         self?.moduleIdentifiers = newModuleIdentifiers
                         
                         // notify the debug delegate
-                        delegateQueue.async { self?.debugDelegate?.debugLog("Check for stale modules. Resulting modules \(newModuleIdentifiers.map { $0.moduleIdentifier.logDescription }.joined(separator: ", "))") }
+                        self?.delegateQueue.async { self?.debugDelegate?.debugLog("Check for stale modules. Resulting modules \(newModuleIdentifiers.map { $0.moduleIdentifier.logDescription }.joined(separator: ", "))") }
                         
                     }
                 
