@@ -760,7 +760,7 @@ final public class OTPProducer: Component {
                 if let _ = self?.moduleAdvertisementTimer {
                     
                     // notify the debug delegate
-                    self?.debugDelegate?.debugLog("Completed initial wait for module advertisement messages")
+                    delegateQueue.async { self?.debugDelegate?.debugLog("Completed initial wait for module advertisement messages") }
 
                     // start the transform heartbeat
                     self?.startTransform()
@@ -807,7 +807,7 @@ final public class OTPProducer: Component {
                         self?.moduleIdentifiers = newModuleIdentifiers
                         
                         // notify the debug delegate
-                        self?.debugDelegate?.debugLog("Check for stale modules. Resulting modules \(newModuleIdentifiers.map { $0.moduleIdentifier.logDescription }.joined(separator: ", "))")
+                        delegateQueue.async { self?.debugDelegate?.debugLog("Check for stale modules. Resulting modules \(newModuleIdentifiers.map { $0.moduleIdentifier.logDescription }.joined(separator: ", "))") }
                         
                     }
                 
@@ -1415,7 +1415,7 @@ extension OTPProducer: ComponentSocketDelegate {
                     let moduleAdvertisementLayer = try ModuleAdvertismentLayer.parse(fromData: advertisementLayer.data)
                     
                     // notify the debug delegate
-                    self.debugDelegate?.debugLog("Received module identifiers \(moduleAdvertisementLayer.moduleIdentifiers.map { $0.logDescription }.joined(separator: ", ")) from \(otpLayer.cid)")
+                    delegateQueue.async { self.debugDelegate?.debugLog("Received module identifiers \(moduleAdvertisementLayer.moduleIdentifiers.map { $0.logDescription }.joined(separator: ", ")) from \(otpLayer.cid)") }
                     
                     let now = Date()
                     
