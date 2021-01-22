@@ -1191,42 +1191,42 @@ extension OTPConsumer: ComponentSocketDelegate {
     */
     func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort) {
 
-        do {
+        Self.queue.sync(flags: .barrier) {
+        
+            do {
 
-            // try to extract an OTP Layer
-            let otpLayer = try OTPLayer.parse(fromData: data)
-            
-            // this message must not originate from this component
-            let ownCid = Self.queue.sync { self.cid }
-            guard otpLayer.cid != ownCid else { return }
-            
-            // get the current list of producers
-            let producers = Self.queue.sync { self.producers }
+                // try to extract an OTP Layer
+                let otpLayer = try OTPLayer.parse(fromData: data)
+                
+                // this message must not originate from this component
+                let ownCid = self.cid
+                guard otpLayer.cid != ownCid else { return }
+                
+                // get the current list of producers
+                let producers = self.producers
 
-            switch otpLayer.vector {
-            case .advertisementMessage:
+                switch otpLayer.vector {
+                case .advertisementMessage:
 
-                // try to extract an advertisement layer
-                let advertisementLayer = try AdvertismentLayer.parse(fromData: otpLayer.data)
+                    // try to extract an advertisement layer
+                    let advertisementLayer = try AdvertismentLayer.parse(fromData: otpLayer.data)
 
-                switch advertisementLayer.vector {
-                case .module:
-                    // consumers don't care about module advertisement messages
-                    break
-                case .name:
-                    
-                    // if a previous message of this type has been received, it must be within the valid range
-                    if let producer = producers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = producer.nameAdvertisementFolio, let previousPage = producer.nameAdvertisementPage {
-                        guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(producer.cid) }
-                    }
-
-                    // try to extract a name advertisement layer
-                    let nameAdvertisementLayer = try NameAdvertismentLayer.parse(fromData: advertisementLayer.data)
-
-                    guard let addressPointDescriptions = nameAdvertisementLayer?.addressPointDescriptions else { return }
-
-                    Self.queue.sync(flags: .barrier) {
+                    switch advertisementLayer.vector {
+                    case .module:
+                        // consumers don't care about module advertisement messages
+                        break
+                    case .name:
                         
+                        // if a previous message of this type has been received, it must be within the valid range
+                        if let producer = producers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = producer.nameAdvertisementFolio, let previousPage = producer.nameAdvertisementPage {
+                            guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(producer.cid) }
+                        }
+
+                        // try to extract a name advertisement layer
+                        let nameAdvertisementLayer = try NameAdvertismentLayer.parse(fromData: advertisementLayer.data)
+
+                        guard let addressPointDescriptions = nameAdvertisementLayer?.addressPointDescriptions else { return }
+                            
                         // does this producer already exist?
                         if let index = self.producers.firstIndex(where: { $0.cid == otpLayer.cid }) {
   
@@ -1274,28 +1274,24 @@ extension OTPConsumer: ComponentSocketDelegate {
                             
                         }
                         
-                    }
-                    
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Received name advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Received name advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
+                            
+                    case .system:
+
+                        // if a previous message of this type has been received, it must be within the valid range
+                        if let producer = producers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = producer.systemAdvertisementFolio {
+                            guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio) else { throw OTPLayerValidationError.folioOutOfRange(producer.cid) }
+                        }
                         
-                case .system:
+                        // get the delegate
+                        let delegate = self.protocolErrorDelegate
 
-                    // if a previous message of this type has been received, it must be within the valid range
-                    if let producer = producers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = producer.systemAdvertisementFolio {
-                        guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio) else { throw OTPLayerValidationError.folioOutOfRange(producer.cid) }
-                    }
-                    
-                    // get the delegate
-                    let delegate = Self.queue.sync { self.protocolErrorDelegate }
+                        // try to extract a system advertisement layer
+                        let systemAdvertisementLayer = try SystemAdvertismentLayer.parse(fromData: advertisementLayer.data, delegate: delegate, delegateQueue: delegateQueue)
 
-                    // try to extract a system advertisement layer
-                    let systemAdvertisementLayer = try SystemAdvertismentLayer.parse(fromData: advertisementLayer.data, delegate: delegate, delegateQueue: delegateQueue)
-
-                    guard let systemNumbers = systemAdvertisementLayer?.systemNumbers else { return }
-
-                    Self.queue.sync(flags: .barrier) {
-                        
+                        guard let systemNumbers = systemAdvertisementLayer?.systemNumbers else { return }
+                            
                         // does this producer already exist?
                         if let index = self.producers.firstIndex(where: { $0.cid == otpLayer.cid }) {
 
@@ -1343,31 +1339,27 @@ extension OTPConsumer: ComponentSocketDelegate {
                             Self.socketDelegateQueue.async { self.sendNameAdvertisementMessages() }
                             
                         }
+                                                        
+                        // joins newly discovered systems which are observed
+                        refreshSystemSubscription()
+                        
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Received system advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
                         
                     }
-                        
-                    // joins newly discovered systems which are observed
-                    refreshSystemSubscription()
-                    
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Received system advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
-                    
-                }
 
-            case .transformMessage:
+                case .transformMessage:
 
-                let moduleTypes = Self.queue.sync { self.moduleTypes }
-                let delegate = Self.queue.sync { self.protocolErrorDelegate }
-                
-                // try to extract a transform layer
-                let transformLayer = try TransformLayer.parse(fromData: otpLayer.data, moduleTypes: moduleTypes, delegate: delegate, delegateQueue: delegateQueue)
-                
-                let points = transformLayer.points.map { ConsumerPoint(address: OTPAddress(system: transformLayer.systemNumber, group: $0.groupNumber, point: $0.pointNumber), priority: $0.priority, cid: otpLayer.cid, sampled: $0.timestamp, modules: $0.modules) }
-                
-                let folio = Folio(number: otpLayer.folio, pages: [otpLayer.page], lastPage: otpLayer.lastPage, fullPointSet: transformLayer.fullPointSet, points: points)
-                
-                Self.queue.sync(flags: .barrier) {
+                    let moduleTypes = self.moduleTypes
+                    let delegate = self.protocolErrorDelegate
                     
+                    // try to extract a transform layer
+                    let transformLayer = try TransformLayer.parse(fromData: otpLayer.data, moduleTypes: moduleTypes, delegate: delegate, delegateQueue: delegateQueue)
+                    
+                    let points = transformLayer.points.map { ConsumerPoint(address: OTPAddress(system: transformLayer.systemNumber, group: $0.groupNumber, point: $0.pointNumber), priority: $0.priority, cid: otpLayer.cid, sampled: $0.timestamp, modules: $0.modules) }
+                    
+                    let folio = Folio(number: otpLayer.folio, pages: [otpLayer.page], lastPage: otpLayer.lastPage, fullPointSet: transformLayer.fullPointSet, points: points)
+                                            
                     // does this producer already exist?
                     if let index = self.producers.firstIndex(where: { $0.cid == otpLayer.cid }) {
                                      
@@ -1409,23 +1401,19 @@ extension OTPConsumer: ComponentSocketDelegate {
                         Self.socketDelegateQueue.async { self.sendNameAdvertisementMessages() }
 
                     }
-                    
+                        
                 }
-
-            }
-            
-        } catch let error as OTPLayerValidationError {
-            
-            switch error {
-            case .lengthOutOfRange, .invalidPacketIdentifier:
                 
-                // these errors should not be notified
-                break
+            } catch let error as OTPLayerValidationError {
                 
-            case let .folioOutOfRange(cid):
-                
-                Self.queue.sync(flags: .barrier) {
+                switch error {
+                case .lengthOutOfRange, .invalidPacketIdentifier:
                     
+                    // these errors should not be notified
+                    break
+                    
+                case let .folioOutOfRange(cid):
+                                            
                     if let index = self.producers.firstIndex(where: { $0.cid == cid }) {
 
                         // increment the sequence errors
@@ -1439,45 +1427,45 @@ extension OTPConsumer: ComponentSocketDelegate {
                         self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(producerStatus) }
                         
                     }
+                                            
+                default:
                     
+                    // there was an error in the otp layer
+                    delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+
                 }
                 
-            default:
+            } catch let error as AdvertisementLayerValidationError {
                 
-                // there was an error in the otp layer
+                // there was an error in the advertisement layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+                
+            } catch let error as ModuleAdvertisementLayerValidationError {
+                
+                // there was an error in the module advertisement layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+                
+            } catch let error as SystemAdvertisementLayerValidationError {
+
+                // there was an error in the system advertisement layer
                 delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
 
+            } catch let error as NameAdvertisementLayerValidationError {
+
+                // there was an error in the name advertisement layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+                
+            } catch let error as TransformLayerValidationError {
+                
+                // there was an error in the transform layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+                
+            } catch let error {
+                
+                // there was an unknown error
+                delegateQueue.async { self.protocolErrorDelegate?.unknownError(error.localizedDescription) }
+                
             }
-            
-        } catch let error as AdvertisementLayerValidationError {
-            
-            // there was an error in the advertisement layer
-            delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-            
-        } catch let error as ModuleAdvertisementLayerValidationError {
-            
-            // there was an error in the module advertisement layer
-            delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-            
-        } catch let error as SystemAdvertisementLayerValidationError {
-
-            // there was an error in the system advertisement layer
-            delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-
-        } catch let error as NameAdvertisementLayerValidationError {
-
-            // there was an error in the name advertisement layer
-            delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-            
-        } catch let error as TransformLayerValidationError {
-            
-            // there was an error in the transform layer
-            delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-            
-        } catch let error {
-            
-            // there was an unknown error
-            delegateQueue.async { self.protocolErrorDelegate?.unknownError(error.localizedDescription) }
             
         }
         

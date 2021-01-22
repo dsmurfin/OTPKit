@@ -1380,70 +1380,70 @@ extension OTPProducer: ComponentSocketDelegate {
         - port: The source port of the message.
      
     */
-    func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort) {
+    func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort, ipMode: OTPIPMode) {
         
-        do {
-            
-            // try to extract an OTP Layer
-            let otpLayer = try OTPLayer.parse(fromData: data)
-            
-            // this message must not originate from this component
-            let ownCid = Self.queue.sync { self.cid }
-            guard otpLayer.cid != ownCid else { return }
-
-            switch otpLayer.vector {
-            case .advertisementMessage:
-
-                // try to extract an advertisement layer
-                let advertisementLayer = try AdvertismentLayer.parse(fromData: otpLayer.data)
+        Self.queue.sync(flags: .barrier) {
+        
+            do {
+                            
+                // try to extract an OTP Layer
+                let otpLayer = try OTPLayer.parse(fromData: data)
                 
-                // get the current list of consumers
-                let consumers = Self.queue.sync { self.consumers }
+                // this message must not originate from this component
+                let ownCid = self.cid
+                guard otpLayer.cid != ownCid else { return }
 
-                switch advertisementLayer.vector {
-                case .module:
-                    
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Received module advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
-                      
-                    // if a previous message of this type has been received, it must be within the valid range
-                    if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.moduleAdvertisementFolio, let previousPage = consumer.moduleAdvertisementPage {
-                        guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
-                    }
-                    
-                    // try to extract a module advertisement layer
-                    let moduleAdvertisementLayer = try ModuleAdvertismentLayer.parse(fromData: advertisementLayer.data)
-                    
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Received module identifiers \(moduleAdvertisementLayer.moduleIdentifiers.map { $0.logDescription }.joined(separator: ", ")) from \(otpLayer.cid)") }
-                    
-                    let now = Date()
-                    
-                    // get all module identifiers and their associated modules
-                    var moduleIdentifiersAndAssociations = [OTPModuleIdentifier]()
-                    for moduleIdentifier in moduleAdvertisementLayer.moduleIdentifiers {
+                switch otpLayer.vector {
+                case .advertisementMessage:
 
-                        if let associations = ModuleAssociations.associations.first(where: { $0.source.identifier == moduleIdentifier })?.associated.map ({ $0.identifier }) {
-                            moduleIdentifiersAndAssociations += [moduleIdentifier]
-                            moduleIdentifiersAndAssociations += associations
-                        } else {
-                            moduleIdentifiersAndAssociations += [moduleIdentifier]
+                    // try to extract an advertisement layer
+                    let advertisementLayer = try AdvertismentLayer.parse(fromData: otpLayer.data)
+                    
+                    // get the current list of consumers
+                    let consumers = self.consumers
+
+                    switch advertisementLayer.vector {
+                    case .module:
+                          
+                        // if a previous message of this type has been received, it must be within the valid range
+                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.moduleAdvertisementFolio, let previousPage = consumer.moduleAdvertisementPage {
+                            guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
                         }
                         
-                    }
-          
-                    // get new, and existing module identifiers
-                    let receivedModuleIdentifiers = moduleIdentifiersAndAssociations.map { ModuleIdentifierNotification(moduleIdentifier: $0, notified: now) }
-                    let existingModuleIdentifiers = Self.queue.sync { self.moduleIdentifiers }
-
-                    // unique module identifiers, keeping newly provided over existing
-                    let newModuleIdentifiers = Array(Set(receivedModuleIdentifiers).union(existingModuleIdentifiers)).sorted()
-
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Resulting modules \(newModuleIdentifiers.map { $0.moduleIdentifier.logDescription }.joined(separator: ", "))") }
-                    
-                    Self.queue.sync(flags: .barrier) {
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Received module advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
                         
+                        // try to extract a module advertisement layer
+                        let moduleAdvertisementLayer = try ModuleAdvertismentLayer.parse(fromData: advertisementLayer.data)
+                        
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Received module identifiers \(moduleAdvertisementLayer.moduleIdentifiers.map { $0.logDescription }.joined(separator: ", ")) from \(otpLayer.cid)") }
+                        
+                        let now = Date()
+                        
+                        // get all module identifiers and their associated modules
+                        var moduleIdentifiersAndAssociations = [OTPModuleIdentifier]()
+                        for moduleIdentifier in moduleAdvertisementLayer.moduleIdentifiers {
+
+                            if let associations = ModuleAssociations.associations.first(where: { $0.source.identifier == moduleIdentifier })?.associated.map ({ $0.identifier }) {
+                                moduleIdentifiersAndAssociations += [moduleIdentifier]
+                                moduleIdentifiersAndAssociations += associations
+                            } else {
+                                moduleIdentifiersAndAssociations += [moduleIdentifier]
+                            }
+                            
+                        }
+              
+                        // get new, and existing module identifiers
+                        let receivedModuleIdentifiers = moduleIdentifiersAndAssociations.map { ModuleIdentifierNotification(moduleIdentifier: $0, notified: now) }
+                        let existingModuleIdentifiers = self.moduleIdentifiers
+
+                        // unique module identifiers, keeping newly provided over existing
+                        let newModuleIdentifiers = Array(Set(receivedModuleIdentifiers).union(existingModuleIdentifiers)).sorted()
+
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Resulting modules \(newModuleIdentifiers.map { $0.moduleIdentifier.logDescription }.joined(separator: ", "))") }
+                                                    
                         // only rebuild if the identifiers are different
                         if newModuleIdentifiers != self.moduleIdentifiers {
 
@@ -1513,27 +1513,23 @@ extension OTPProducer: ComponentSocketDelegate {
                             self.delegateQueue.async { self.producerDelegate?.consumerStatusChanged(OTPConsumerStatus(name: otpLayer.componentName, cid: otpLayer.cid, ipAddress: hostname, sequenceErrors: consumer.sequenceErrors, state: .advertising, moduleIdentifiers: moduleAdvertisementLayer.moduleIdentifiers)) }
                             
                         }
-                    
-                    }
-                    
-                case .name:
-                    
-                    // if a previous message of this type has been received, it must be within the valid range
-                    if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.nameAdvertisementFolio, let previousPage = consumer.nameAdvertisementPage {
-                        guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
-                    }
+                                                
+                    case .name:
+                        
+                        // if a previous message of this type has been received, it must be within the valid range
+                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.nameAdvertisementFolio, let previousPage = consumer.nameAdvertisementPage {
+                            guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
+                        }
 
-                    // try to extract a name advertisement layer
-                    let response = try NameAdvertismentLayer.parse(fromData: advertisementLayer.data)
-                    
-                    // this must not be a response
-                    guard response == nil else { return }
-                    
-                    // send any name advertisement messages after a random amount of time
-                    sendDelayedNameAdvertisementMessage(to: hostname, port: port)
-                    
-                    Self.queue.sync(flags: .barrier) {
-                    
+                        // try to extract a name advertisement layer
+                        let response = try NameAdvertismentLayer.parse(fromData: advertisementLayer.data)
+                        
+                        // this must not be a response
+                        guard response == nil else { return }
+                        
+                        // send any name advertisement messages after a random amount of time
+                        sendDelayedNameAdvertisementMessage(to: hostname, port: port)
+                                                
                         // update or add this consumer
                         if let index = consumers.firstIndex(where: { $0.cid == otpLayer.cid }) {
 
@@ -1579,30 +1575,26 @@ extension OTPProducer: ComponentSocketDelegate {
                             
                             
                         }
+                                                    
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Received name advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
                         
-                    }
-                    
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Received name advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
-                    
-                case .system:
-                    
-                    // if a previous message of this type has been received, it must be within the valid range
-                    if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.systemAdvertisementFolio {
-                        guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
-                    }
+                    case .system:
+                        
+                        // if a previous message of this type has been received, it must be within the valid range
+                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.systemAdvertisementFolio {
+                            guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
+                        }
 
-                    // try to extract a system advertisement layer
-                    let response = try SystemAdvertismentLayer.parse(fromData: advertisementLayer.data, delegate: nil, delegateQueue: delegateQueue)
-                    
-                    // this must not be a response
-                    guard response == nil else { return }
-                    
-                    // send a system advertisement message after a random amount of time
-                    sendDelayedSystemAdvertisementMessage(to: hostname, port: port)
-                    
-                    Self.queue.sync(flags: .barrier) {
-                    
+                        // try to extract a system advertisement layer
+                        let response = try SystemAdvertismentLayer.parse(fromData: advertisementLayer.data, delegate: nil, delegateQueue: delegateQueue)
+                        
+                        // this must not be a response
+                        guard response == nil else { return }
+                        
+                        // send a system advertisement message after a random amount of time
+                        sendDelayedSystemAdvertisementMessage(to: hostname, port: port)
+                                                
                         // update or add this consumer
                         if let index = consumers.firstIndex(where: { $0.cid == otpLayer.cid }) {
                             
@@ -1647,31 +1639,27 @@ extension OTPProducer: ComponentSocketDelegate {
                             self.delegateQueue.async { self.producerDelegate?.consumerStatusChanged(OTPConsumerStatus(name: otpLayer.componentName, cid: otpLayer.cid, ipAddress: hostname, sequenceErrors: consumer.sequenceErrors, state: .advertising, moduleIdentifiers: [])) }
                             
                         }
-                        
+                                                    
+                        // notify the debug delegate
+                        delegateQueue.async { self.debugDelegate?.debugLog("Received system advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
+
                     }
-                    
-                    // notify the debug delegate
-                    delegateQueue.async { self.debugDelegate?.debugLog("Received system advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
 
+                case .transformMessage:
+                    // producers don't care about transform messages
+                    break
                 }
-
-            case .transformMessage:
-                // producers don't care about transform messages
-                break
-            }
-            
-        } catch let error as OTPLayerValidationError {
+                
+            } catch let error as OTPLayerValidationError {
+                       
+                switch error {
+                case .lengthOutOfRange, .invalidPacketIdentifier:
                    
-            switch error {
-            case .lengthOutOfRange, .invalidPacketIdentifier:
-               
-               // these errors should not be notified
-               break
-                
-            case let .folioOutOfRange(cid):
-                
-                Self.queue.sync(flags: .barrier) {
+                   // these errors should not be notified
+                   break
                     
+                case let .folioOutOfRange(cid):
+                        
                     if let index = self.consumers.firstIndex(where: { $0.cid == cid }) {
 
                         // increment the sequence errors
@@ -1685,46 +1673,46 @@ extension OTPProducer: ComponentSocketDelegate {
                         self.delegateQueue.async { self.producerDelegate?.consumerStatusChanged(consumerStatus) }
                         
                     }
+
+                default:
+                   
+                    // there was an error in the otp layer
+                    delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
                     
                 }
-
-            default:
+                    
+            } catch let error as AdvertisementLayerValidationError {
                
-               // there was an error in the otp layer
+                // there was an error in the advertisement layer
                 delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-                
+               
+            } catch let error as ModuleAdvertisementLayerValidationError {
+               
+                // there was an error in the module advertisement layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+               
+            } catch let error as SystemAdvertisementLayerValidationError {
+
+                // there was an error in the system advertisement layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+
+            } catch let error as NameAdvertisementLayerValidationError {
+
+                // there was an error in the name advertisement layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+               
+            } catch let error as TransformLayerValidationError {
+               
+                // there was an error in the transform layer
+                delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
+               
+            } catch let error {
+               
+                // there was an unknown error
+                delegateQueue.async { self.protocolErrorDelegate?.unknownError(error.localizedDescription) }
+               
             }
-                
-        } catch let error as AdvertisementLayerValidationError {
-           
-           // there was an error in the advertisement layer
-           delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-           
-        } catch let error as ModuleAdvertisementLayerValidationError {
-           
-           // there was an error in the module advertisement layer
-           delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-           
-        } catch let error as SystemAdvertisementLayerValidationError {
-
-           // there was an error in the system advertisement layer
-           delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-
-        } catch let error as NameAdvertisementLayerValidationError {
-
-           // there was an error in the name advertisement layer
-           delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-           
-        } catch let error as TransformLayerValidationError {
-           
-           // there was an error in the transform layer
-           delegateQueue.async { self.protocolErrorDelegate?.layerError(error.logDescription) }
-           
-        } catch let error {
-           
-           // there was an unknown error
-            delegateQueue.async { self.protocolErrorDelegate?.unknownError(error.localizedDescription) }
-           
+            
         }
         
     }
