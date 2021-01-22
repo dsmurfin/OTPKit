@@ -1316,10 +1316,10 @@ private extension OTPProducer {
 
                 // send the message(s)
                 if ipMode.usesIPv4(), let hostname = IPv4.transformHostname(for: systemMessage.systemNumber) {
-                    multicast4Socket?.send(message: messageData, host: hostname, port: UDP.otpPort)
+                    unicastSocket.send(message: messageData, host: hostname, port: UDP.otpPort)
                 }
                 if ipMode.usesIPv6(), let hostname = IPv6.transformHostname(for: systemMessage.systemNumber) {
-                    multicast6Socket?.send(message: messageData, host: hostname, port: UDP.otpPort)
+                    unicastSocket.send(message: messageData, host: hostname, port: UDP.otpPort)
                 }
                 
             }
