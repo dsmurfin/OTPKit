@@ -1380,7 +1380,7 @@ extension OTPProducer: ComponentSocketDelegate {
         - port: The source port of the message.
      
     */
-    func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort, ipMode: OTPIPMode) {
+    func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort) {
         
         Self.queue.sync(flags: .barrier) {
         
