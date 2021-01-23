@@ -1376,7 +1376,7 @@ extension OTPConsumer: ComponentSocketDelegate {
                         }
                                                         
                         // joins newly discovered systems which are observed
-                        Self.socketDelegateQueue.async { refreshSystemSubscription() }
+                        Self.socketDelegateQueue.async { self.refreshSystemSubscription() }
                         
                         // notify the debug delegate
                         delegateQueue.async { self.debugDelegate?.debugLog("Received system advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
