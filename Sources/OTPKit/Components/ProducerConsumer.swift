@@ -41,8 +41,11 @@ struct ProducerConsumer: Equatable {
     /// The human-readable name of the consumer.
     var name: ComponentName
     
-    /// The ip address of the consumer.
-    var ipAddress: String
+    /// The ip mode of the consumer.
+    var ipMode: OTPIPMode
+    
+    /// The ip addresses of the consumer.
+    var ipAddresses: [String]
     
     /// The last system advertisement folio number received from this consumer.
     var systemAdvertisementFolio: FolioNumber?
@@ -77,14 +80,16 @@ struct ProducerConsumer: Equatable {
      - Parameters:
         - cid: The CID of the Consumer.
         - name: The human-readable name of the Consumer.
-        - ipAddress: The IP Address of the Producer.
+        - ipMode: The `OTPIPMode` of the Consumer.
+        - ipAddress: The IP Address of the Consumer.
         - systemAdvertisementFolio: The System Advertisement folio number received from the Consumer.
 
     */
-    init(cid: CID, name: ComponentName, ipAddress: String, systemAdvertisementFolio: FolioNumber) {
+    init(cid: CID, name: ComponentName, ipMode: OTPIPMode, ipAddress: String, systemAdvertisementFolio: FolioNumber) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = [ipAddress]
         self.systemAdvertisementFolio = systemAdvertisementFolio
         self.moduleIdentifiers = []
         self.receivedAdvertisement = Date()
@@ -98,15 +103,17 @@ struct ProducerConsumer: Equatable {
      - Parameters:
         - cid: The CID of the Consumer.
         - name: The human-readable name of the Consumer.
-        - ipAddress: The IP Address of the Producer.
+        - ipMode: The `OTPIPMode` of the Consumer.
+        - ipAddress: The IP Address of the Consumer.
         - nameAdvertisementFolio: The Name Advertisement folio number received from the Consumer.
         - nameAdvertisementPage: The Name Advertisement page received from the Consumer.
 
     */
-    init(cid: CID, name: ComponentName, ipAddress: String, nameAdvertisementFolio: FolioNumber, nameAdvertisementPage: Page) {
+    init(cid: CID, name: ComponentName, ipMode: OTPIPMode, ipAddress: String, nameAdvertisementFolio: FolioNumber, nameAdvertisementPage: Page) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = [ipAddress]
         self.nameAdvertisementFolio = nameAdvertisementFolio
         self.nameAdvertisementPage = nameAdvertisementPage
         self.moduleIdentifiers = []
@@ -121,16 +128,18 @@ struct ProducerConsumer: Equatable {
      - Parameters:
         - cid: The CID of the Consumer.
         - name: The human-readable name of the Consumer.
-        - ipAddress: The IP Address of the Producer.
+        - ipMode: The `OTPIPMode` of the Consumer.
+        - ipAddress: The IP Address of the Consumer.
         - moduleAdvertisementFolio: The Module Advertisement folio number received from the Consumer.
         - moduleAdvertisementPage: The Module Advertisement page received from the Consumer.
         - moduleIdentifiers: The Module Identifiers received from the Consumer.
 
     */
-    init(cid: CID, name: ComponentName, ipAddress: String, moduleAdvertisementFolio: FolioNumber, moduleAdvertisementPage: Page, moduleIdentifiers: [OTPModuleIdentifier]) {
+    init(cid: CID, name: ComponentName, ipMode: OTPIPMode, ipAddress: String, moduleAdvertisementFolio: FolioNumber, moduleAdvertisementPage: Page, moduleIdentifiers: [OTPModuleIdentifier]) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = [ipAddress]
         self.moduleAdvertisementFolio = moduleAdvertisementFolio
         self.moduleAdvertisementPage = moduleAdvertisementPage
         self.moduleIdentifiers = moduleIdentifiers

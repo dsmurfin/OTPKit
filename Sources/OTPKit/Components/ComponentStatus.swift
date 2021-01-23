@@ -62,8 +62,11 @@ public protocol OTPComponentStatus {
     /// A human-readable name for the component.
     var name: String { get set }
     
-    /// The IP address of the component.
-    var ipAddress: String { get set }
+    /// The IP mode of the component.
+    var ipMode: OTPIPMode { get set }
+    
+    /// The IP addresses of the component.
+    var ipAddresses: [String] { get set }
     
     /// The number of sequence errors in advertisement messages from the component.
     var sequenceErrors: Int { get set }
@@ -90,8 +93,11 @@ public struct OTPProducerStatus: OTPComponentStatus {
     /// A human-readable name for the producer.
     public var name: String
     
-    /// The IP address of the producer.
-    public var ipAddress: String
+    /// The IP mode of the producer.
+    public var ipMode: OTPIPMode
+    
+    /// The IP addresses of the producer.
+    public var ipAddresses: [String]
     
     /// The number of sequence errors in advertisement messages from the producer.
     public var sequenceErrors: Int
@@ -107,16 +113,18 @@ public struct OTPProducerStatus: OTPComponentStatus {
      - Parameters:
         - name: The human-readable name of this Producer.
         - cid: The CID of this Producer.
-        - ipAddress: The IP Address of this Producer.
+        - ipMode: The IP mode of this Producer.
+        - ipAddresses: The IP Addresses of this Producer.
         - sequenceErrors: The number of sequence errors from this Producer.
         - state: The state of this Producer.
         - online: Optional: Whether this Producer is considered online.
 
     */
-    public init(name: String, cid: UUID, ipAddress: String, sequenceErrors: Int, state: OTPComponentState) {
+    public init(name: String, cid: UUID, ipMode: OTPIPMode, ipAddresses: [String], sequenceErrors: Int, state: OTPComponentState) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = ipAddresses
         self.sequenceErrors = sequenceErrors
         self.state = state
     }
@@ -140,8 +148,11 @@ public struct OTPConsumerStatus: OTPComponentStatus {
     /// A human-readable name for the consumer.
     public var name: String
     
-    /// The IP address of the consumer.
-    public var ipAddress: String
+    /// The IP mode of the producer.
+    public var ipMode: OTPIPMode
+    
+    /// The IP addresses of the consumer.
+    public var ipAddresses: [String]
     
     /// The number of sequence errors in advertisement messages from the consumer.
     public var sequenceErrors: Int
@@ -160,16 +171,18 @@ public struct OTPConsumerStatus: OTPComponentStatus {
      - Parameters:
         - name: The human-readable name of this Consumer.
         - cid: The CID of this Consumer.
-        - ipAddress: The IP Address of this Consumer.
+        - ipMode: The IP mode of this Consumer.
+        - ipAddresses: The IP Addresses of this Consumer.
         - sequenceErrors: The number of sequence errors from this Consumer.
         - state: The state of this Consumer.
         - moduleIdentifiers: The supported module identifiers of this Consumer.
 
     */
-    public init(name: String, cid: UUID, ipAddress: String, sequenceErrors: Int, state: OTPComponentState, moduleIdentifiers: [OTPModuleIdentifier]) {
+    public init(name: String, cid: UUID, ipMode: OTPIPMode, ipAddresses: [String], sequenceErrors: Int, state: OTPComponentState, moduleIdentifiers: [OTPModuleIdentifier]) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = ipAddresses
         self.sequenceErrors = sequenceErrors
         self.state = state
         self.supportedModuleIdentifiers = moduleIdentifiers.map { "\($0.logDescription)" }

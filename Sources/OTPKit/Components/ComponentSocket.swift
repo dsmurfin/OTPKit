@@ -46,6 +46,22 @@ enum ComponentSocketType {
     
 }
 
+/**
+ Component Socket IP Family
+ 
+ Enumerates the possible IP families.
+ 
+ */
+enum ComponentSocketIPFamily: String {
+    
+    /// IPv4.
+    case IPv4 = "IPv4"
+    
+    /// IPv6.
+    case IPv6 = "IPv6"
+    
+}
+
 // MARK: -
 // MARK: -
 
@@ -100,8 +116,6 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
         super.init()
         self.socket = GCDAsyncUdpSocket(delegate: self, delegateQueue: delegateQueue, socketQueue: self.socketQueue)
     }
-    
-    // FIXME: IPv6 support waiting for https://github.com/robbiehanson/CocoaAsyncSocket/pull/239
     
     /**
      Allows other services to reuse the port.
@@ -274,15 +288,16 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
     */
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didReceive data: Data, fromAddress address: Data, withFilterContext filterContext: Any?) {
         
-        // notify the delegate
-        delegate?.debugSocketLog("Socket received data of length \(data.count), from address \(address)")
-        
         // get the source hostname and port from the address
         guard let hostname = GCDAsyncUdpSocket.host(fromAddress: address) else { return }
         let port = GCDAsyncUdpSocket.port(fromAddress: address)
+        let ipFamily: ComponentSocketIPFamily = GCDAsyncUdpSocket.family(fromAddress: address) == AF_INET6 ? .IPv6 : .IPv4
+        
+        // notify the delegate
+        delegate?.debugSocketLog("Socket received data of length \(data.count), from \(ipFamily.rawValue) \(hostname):\(port)")
 
         // notify the delegate
-        delegate?.receivedMessage(withData: data, sourceHostname: hostname, sourcePort: port)
+        delegate?.receivedMessage(withData: data, sourceHostname: hostname, sourcePort: port, ipFamily: ipFamily)
         
     }
     
@@ -319,9 +334,10 @@ protocol ComponentSocketDelegate: class {
         - data: The message as `Data`.
         - sourceHostname: The `Hostname` of the source of the message.
         - sourcePort: The `UDPPort` of the source of the message.
+        - ipFamily: The `ComponentSocketIPFamily` of the source of the message.
 
     */
-    func receivedMessage(withData data: Data, sourceHostname: Hostname, sourcePort: UDPPort)
+    func receivedMessage(withData data: Data, sourceHostname: Hostname, sourcePort: UDPPort, ipFamily: ComponentSocketIPFamily)
     
     /**
      Called when a debug socket log is produced.

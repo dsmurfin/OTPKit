@@ -982,7 +982,7 @@ final public class OTPConsumer: Component {
         let lostProducers = producers.filter { $0.shouldGoOffline }
         
         for producer in lostProducers {
-            delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: producer.name, cid: producer.cid, ipAddress: producer.ipAddress, sequenceErrors: producer.sequenceErrors, state: .offline)) }
+            delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: producer.name, cid: producer.cid, ipMode: producer.ipMode, ipAddresses: producer.ipAddresses, sequenceErrors: producer.sequenceErrors, state: .offline)) }
         }
 
         Self.queue.sync(flags: .barrier) {
@@ -1187,9 +1187,10 @@ extension OTPConsumer: ComponentSocketDelegate {
         - data: The message data.
         - hostname: The source hostname of the message.
         - port: The source port of the message.
+        - ipFamily: The `ComponentSocketIPFamily` of the source of the message.
      
     */
-    func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort) {
+    func receivedMessage(withData data: Data, sourceHostname hostname: Hostname, sourcePort port: UDPPort, ipFamily: ComponentSocketIPFamily) {
 
         Self.queue.sync(flags: .barrier) {
         
@@ -1204,6 +1205,30 @@ extension OTPConsumer: ComponentSocketDelegate {
                 
                 // get the current list of producers
                 let producers = self.producers
+                
+                // if this component is newly discovered (or coming back online) this should be its mode
+                let newComponentIPMode: OTPIPMode = ipFamily == .IPv4 ? .ipv4Only : .ipv6Only
+                
+                // if a previous message from this producer has been received decide whether to accept it
+                if let producer = producers.first(where: { $0.cid == otpLayer.cid }) {
+                    if producer.notifiedState == .offline, let index = self.producers.firstIndex(where: { $0.cid == otpLayer.cid }) {
+                        // this producer had gone offline, so start allowing messages from another IP family
+                        self.producers[index].ipMode = newComponentIPMode
+                    } else {
+                        switch producer.ipMode {
+                        case .ipv4Only:
+                            // allow any ip mode to be processed
+                            break
+                        case .ipv6Only, .ipv4And6:
+                            // only allow IPv6 messages to be processed
+                            guard ipFamily == .IPv6 else {
+                                // update any hostnames and ip families
+                                updateHostnames(withHostname: hostname, ipFamily: ipFamily, forProducer: producer)
+                                return
+                            }
+                        }
+                    }
+                }
 
                 switch otpLayer.vector {
                 case .advertisementMessage:
@@ -1242,8 +1267,10 @@ extension OTPConsumer: ComponentSocketDelegate {
                             
                             let producer = self.producers[index]
                             
-                            // only send a notification if this was previously notified as offline or the name, or ip address is different
-                            if producer.notifiedState == .offline || producer.name != otpLayer.componentName || producer.ipAddress != hostname {
+                            let existingComponentIPMode = newIPMode(from: ipFamily, for: producer)
+                            
+                            // only send a notification if this was previously notified as offline or the name, ip address, or ip mode is different
+                            if producer.notifiedState == .offline || producer.name != otpLayer.componentName || !producer.ipAddresses.contains(hostname) || producer.ipMode != existingComponentIPMode {
                                                            
                                 // the producer is now advertising
                                 if producer.notifiedState == .offline {
@@ -1253,24 +1280,27 @@ extension OTPConsumer: ComponentSocketDelegate {
                                 // get the newly changed state
                                 let notifiedState = self.producers[index].notifiedState
                                 
+                                let newIpAddresses = Array(Set(producer.ipAddresses).union(Set([hostname]))).sorted()
+                                
                                 // notify the delegate of the producer status
-                                self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: producer.cid, ipAddress: hostname, sequenceErrors: producer.sequenceErrors, state: notifiedState)) }
+                                self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: producer.cid, ipMode: existingComponentIPMode, ipAddresses: newIpAddresses, sequenceErrors: producer.sequenceErrors, state: notifiedState)) }
                                 
                                 // update both name and ip when this happens
                                 self.producers[index].name = otpLayer.componentName
-                                self.producers[index].ipAddress = hostname
+                                self.producers[index].ipAddresses = newIpAddresses
+                                self.producers[index].ipMode = existingComponentIPMode
 
                             }
                             
                         } else {
                             
                             // create a new producer and add it to those already known about
-                            let producer = ConsumerProducer(cid: otpLayer.cid, name: otpLayer.componentName, ipAddress: hostname, nameAdvertisementFolio: otpLayer.folio, nameAdvertisementPage: otpLayer.page, addressPointDescriptions: addressPointDescriptions)
+                            let producer = ConsumerProducer(cid: otpLayer.cid, name: otpLayer.componentName, ipMode: newComponentIPMode, ipAddress: hostname, nameAdvertisementFolio: otpLayer.folio, nameAdvertisementPage: otpLayer.page, addressPointDescriptions: addressPointDescriptions)
                             
                             self.producers.append(producer)
                             
                             // notify the delegate of the producer status
-                            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: otpLayer.cid, ipAddress: hostname, sequenceErrors: producer.sequenceErrors, state: .advertising)) }
+                            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: otpLayer.cid, ipMode: newComponentIPMode, ipAddresses: [hostname], sequenceErrors: producer.sequenceErrors, state: .advertising)) }
                             
                         }
                         
@@ -1306,8 +1336,10 @@ extension OTPConsumer: ComponentSocketDelegate {
                             
                             let producer = self.producers[index]
                             
-                            // only send a notification if this was previously notified as offline or the name, or ip address is different
-                            if producer.notifiedState == .offline || producer.name != otpLayer.componentName || producer.ipAddress != hostname {
+                            let existingComponentIPMode = newIPMode(from: ipFamily, for: producer)
+                            
+                            // only send a notification if this was previously notified as offline or the name, ip address, or ip mode is different
+                            if producer.notifiedState == .offline || producer.name != otpLayer.componentName || !producer.ipAddresses.contains(hostname) || producer.ipMode != existingComponentIPMode {
                                 
                                 // the producer is now advertising
                                 if producer.notifiedState == .offline {
@@ -1316,24 +1348,27 @@ extension OTPConsumer: ComponentSocketDelegate {
                                 
                                 // get the newly changed state
                                 let notifiedState = self.producers[index].notifiedState
+                                
+                                let newIpAddresses = Array(Set(producer.ipAddresses).union(Set([hostname]))).sorted()
                                                             
                                 // notify the delegate of the producer information
-                                self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: producer.cid, ipAddress: hostname, sequenceErrors: producer.sequenceErrors, state: notifiedState)) }
+                                self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: producer.cid, ipMode: existingComponentIPMode, ipAddresses: newIpAddresses, sequenceErrors: producer.sequenceErrors, state: notifiedState)) }
                                 
                                 // update both name and ip when this happens
                                 self.producers[index].name = otpLayer.componentName
-                                self.producers[index].ipAddress = hostname
+                                self.producers[index].ipAddresses = newIpAddresses
+                                self.producers[index].ipMode = existingComponentIPMode
 
                             }
                             
                         } else {
                             
                             // create a new producer and add it to those already known about
-                            let producer = ConsumerProducer(cid: otpLayer.cid, name: otpLayer.componentName, ipAddress: hostname, systemAdvertisementFolio: otpLayer.folio, systemNumbers: systemNumbers)
+                            let producer = ConsumerProducer(cid: otpLayer.cid, name: otpLayer.componentName, ipMode: newComponentIPMode, ipAddress: hostname, systemAdvertisementFolio: otpLayer.folio, systemNumbers: systemNumbers)
                             self.producers.append(producer)
                             
                             // notify the delegate of the producer information
-                            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: otpLayer.cid, ipAddress: hostname, sequenceErrors: producer.sequenceErrors, state: .advertising)) }
+                            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: otpLayer.cid, ipMode: newComponentIPMode, ipAddresses: [hostname], sequenceErrors: producer.sequenceErrors, state: .advertising)) }
                             
                             // request names from producers
                             Self.socketDelegateQueue.async { self.sendNameAdvertisementMessages() }
@@ -1370,32 +1405,37 @@ extension OTPConsumer: ComponentSocketDelegate {
                         
                         self.receivedFolio(folio, forSystemNumber: transformLayer.systemNumber, forProducer: producer)
                         
-                        // only send a notification if this was not previously notified as online or the name, or ip address is different
-                        if producer.notifiedState != .online || producer.name != otpLayer.componentName || producer.ipAddress != hostname {
+                        let existingComponentIPMode = newIPMode(from: ipFamily, for: producer)
+                        
+                        // only send a notification if this was previously notified as offline or the name, ip address, or ip mode is different
+                        if producer.notifiedState != .online || producer.name != otpLayer.componentName || !producer.ipAddresses.contains(hostname) || producer.ipMode != existingComponentIPMode {
                             
                             // the producer is now online
                             self.producers[index].notifiedState = .online
+                            
+                            let newIpAddresses = Array(Set(producer.ipAddresses).union(Set([hostname]))).sorted()
                                                         
                             // notify the delegate this producer is online
-                            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: producer.cid, ipAddress: hostname, sequenceErrors: producer.sequenceErrors, state: .online)) }
+                            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: otpLayer.componentName, cid: producer.cid, ipMode: existingComponentIPMode, ipAddresses: newIpAddresses, sequenceErrors: producer.sequenceErrors, state: .online)) }
                             
                             // update both name and ip when this happens
                             self.producers[index].name = otpLayer.componentName
-                            self.producers[index].ipAddress = hostname
+                            self.producers[index].ipAddresses = newIpAddresses
+                            self.producers[index].ipMode = existingComponentIPMode
 
                         }
 
                     } else {
                         
                         // create a new producer and add it to those already known about
-                        let producer = ConsumerProducer(cid: otpLayer.cid, name: otpLayer.componentName, ipAddress: hostname)
+                        let producer = ConsumerProducer(cid: otpLayer.cid, name: otpLayer.componentName, ipMode: newComponentIPMode, ipAddress: hostname)
                         
                         self.producers.append(producer)
                         
                         self.receivedFolio(folio, forSystemNumber: transformLayer.systemNumber, forProducer: producer)
 
                         // notify the delegate this producer is online
-                        self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: producer.name, cid: otpLayer.cid, ipAddress: hostname, sequenceErrors: producer.sequenceErrors, state: .online)) }
+                        self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: producer.name, cid: otpLayer.cid, ipMode: newComponentIPMode, ipAddresses: [hostname], sequenceErrors: producer.sequenceErrors, state: .online)) }
                         
                         // request names from producers
                         Self.socketDelegateQueue.async { self.sendNameAdvertisementMessages() }
@@ -1421,7 +1461,7 @@ extension OTPConsumer: ComponentSocketDelegate {
                         
                         let producer = self.producers[index]
                         
-                        let producerStatus = OTPProducerStatus(name: producer.name, cid: cid, ipAddress: producer.ipAddress, sequenceErrors: producer.sequenceErrors, state: producer.notifiedState)
+                        let producerStatus = OTPProducerStatus(name: producer.name, cid: cid, ipMode: producer.ipMode, ipAddresses: producer.ipAddresses, sequenceErrors: producer.sequenceErrors, state: producer.notifiedState)
                         
                         // notify the delegate
                         self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(producerStatus) }
@@ -1469,6 +1509,65 @@ extension OTPConsumer: ComponentSocketDelegate {
             
         }
         
+    }
+    
+    /**
+     Called to update hostnames and discovered IP families for a producer.
+     
+     This should only be used when a producer message is rejected due to invalid IP family checks.
+     
+     - Parameters:
+        - hostname: A new hostname for this producer.
+        - ipFamily: The `ComponentSocketIPFamily` that this message was received on.
+        - producer: The producer to be updated.
+     
+     - Precondition: Must be on `queue`.
+
+    */
+    private func updateHostnames(withHostname hostname: String, ipFamily: ComponentSocketIPFamily, forProducer producer: ConsumerProducer) {
+        // must be on the consumer read/write queue
+        dispatchPrecondition(condition: .onQueue(Self.queue))
+        
+        let newIpMode = newIPMode(from: ipFamily, for: producer)
+        
+        if (!producer.ipAddresses.contains(hostname) || producer.ipMode != newIpMode), let index = self.producers.firstIndex(where: { $0.cid == producer.cid }) {
+            let newIpAddresses = Array(Set(producer.ipAddresses).union(Set([hostname]))).sorted()
+
+            // notify the delegate of the producer status
+            self.delegateQueue.async { self.consumerDelegate?.producerStatusChanged(OTPProducerStatus(name: producer.name, cid: producer.cid, ipMode: newIpMode, ipAddresses: newIpAddresses, sequenceErrors: producer.sequenceErrors, state: producer.notifiedState)) }
+            
+            self.producers[index].ipAddresses = newIpAddresses
+            self.producers[index].ipMode = newIpMode
+        }
+    }
+    
+    /**
+     Calculates a new `OTPIPMode` from the existing mode and the newly received IP family.
+     
+     - Parameters:
+        - ipFamily: The `ComponentSocketIPFamily` that this message was received on.
+        - producer: The producer to be evaluated.
+     
+     - Precondition: Must be on `queue`.
+
+    */
+    private func newIPMode(from ipFamily: ComponentSocketIPFamily, for producer: ConsumerProducer) -> OTPIPMode {
+        // must be on the consumer read/write queue
+        dispatchPrecondition(condition: .onQueue(Self.queue))
+        
+        switch producer.ipMode {
+        case .ipv4Only:
+            if ipFamily == .IPv6 {
+                return .ipv4And6
+            }
+        case .ipv6Only:
+            if ipFamily == .IPv4 {
+                return .ipv4And6
+            }
+        case .ipv4And6:
+            break
+        }
+        return producer.ipMode
     }
     
     /**

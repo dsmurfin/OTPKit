@@ -41,8 +41,11 @@ struct ConsumerProducer: Equatable {
     /// The human-readable name of the producer.
     var name: ComponentName
     
-    /// The ip address of the producer.
-    var ipAddress: String
+    /// The ip mode of the producer.
+    var ipMode: OTPIPMode
+    
+    /// The ip addresses of the producer.
+    var ipAddresses: [String]
     
     /// The last system advertisement folio number received from this producer.
     var systemAdvertisementFolio: FolioNumber?
@@ -83,15 +86,17 @@ struct ConsumerProducer: Equatable {
      - Parameters:
         - cid: The CID of the Producer.
         - name: The human-readable name of the Producer.
+        - ipMode: The `OTPIPMode` of the Producer.
         - ipAddress: The IP Address of the Producer.
         - systemAdvertisementFolio: A System Advertisement folio number received from the Producer.
         - systemNumbers: The System Numbers being transmitted by the Producer.
 
     */
-    init(cid: CID, name: ComponentName, ipAddress: String, systemAdvertisementFolio: FolioNumber, systemNumbers: [SystemNumber]) {
+    init(cid: CID, name: ComponentName, ipMode: OTPIPMode, ipAddress: String, systemAdvertisementFolio: FolioNumber, systemNumbers: [SystemNumber]) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = [ipAddress]
         self.systemAdvertisementFolio = systemAdvertisementFolio
         self.addressPointDescriptions = []
         self.systemNumbers = systemNumbers
@@ -108,16 +113,18 @@ struct ConsumerProducer: Equatable {
      - Parameters:
         - cid: The CID of the Producer.
         - name: The human-readable name of the Producer.
+        - ipMode: The `OTPIPMode` of the Producer.
         - ipAddress: The IP Address of the Producer.
         - nameAdvertisementFolio: A Name Advertisement folio number received from the Producer.
         - nameAdvertisementPage: A Name Advertisement page received from the Producer.
         - addressPointDescriptions: The Address Point Descriptions provided by the Producer.
 
     */
-    init(cid: CID, name: ComponentName, ipAddress: String, nameAdvertisementFolio: FolioNumber, nameAdvertisementPage: Page, addressPointDescriptions: [AddressPointDescription]) {
+    init(cid: CID, name: ComponentName, ipMode: OTPIPMode, ipAddress: String, nameAdvertisementFolio: FolioNumber, nameAdvertisementPage: Page, addressPointDescriptions: [AddressPointDescription]) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = [ipAddress]
         self.nameAdvertisementFolio = nameAdvertisementFolio
         self.nameAdvertisementPage = nameAdvertisementPage
         self.addressPointDescriptions = addressPointDescriptions
@@ -135,13 +142,15 @@ struct ConsumerProducer: Equatable {
      - Parameters:
         - cid: The CID of the Producer.
         - name: The human-readable name of the Producer.
+        - ipMode: The `OTPIPMode` of the Producer.
         - ipAddress: The IP Address of the Producer.
      
     */
-    init(cid: CID, name: ComponentName, ipAddress: String) {
+    init(cid: CID, name: ComponentName, ipMode: OTPIPMode, ipAddress: String) {
         self.cid = cid
         self.name = name
-        self.ipAddress = ipAddress
+        self.ipMode = ipMode
+        self.ipAddresses = [ipAddress]
         self.systemTransformFolios = (SystemNumber.minSystemNumber...SystemNumber.maxSystemNumber).map { (systemNumber: $0, folios: []) }
         self.addressPointDescriptions = []
         self.systemNumbers = []
