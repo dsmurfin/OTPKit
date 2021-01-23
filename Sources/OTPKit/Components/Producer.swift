@@ -91,7 +91,7 @@ final public class OTPProducer: Component {
     static let queue: DispatchQueue = DispatchQueue(label: "com.danielmurfin.OTPKit.producerQueue", attributes: .concurrent)
     
     /// The queue on which socket notifications occur.
-    static let socketDelegateQueue: DispatchQueue = DispatchQueue(label: "com.danielmurfin.OTPKit.producerSocketDelegateQueue", attributes: .concurrent)
+    static let socketDelegateQueue: DispatchQueue = DispatchQueue(label: "com.danielmurfin.OTPKit.producerSocketDelegateQueue")
     
     /// The leeway used for timing. Informs the OS how accurate timings should be.
     private static let timingLeeway: DispatchTimeInterval = .nanoseconds(0)

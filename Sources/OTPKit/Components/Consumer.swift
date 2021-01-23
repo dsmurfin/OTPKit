@@ -72,7 +72,7 @@ final public class OTPConsumer: Component {
     static let queue: DispatchQueue = DispatchQueue(label: "com.danielmurfin.OTPKit.consumerQueue", attributes: .concurrent)
     
     /// The queue on which socket notifications occur.
-    static let socketDelegateQueue: DispatchQueue = DispatchQueue(label: "com.danielmurfin.OTPKit.consumerSocketDelegateQueue", attributes: .concurrent)
+    static let socketDelegateQueue: DispatchQueue = DispatchQueue(label: "com.danielmurfin.OTPKit.consumerSocketDelegateQueue")
     
     /// The leeway used for timing. Informs the OS how accurate timings should be.
     private static let timingLeeway: DispatchTimeInterval = .nanoseconds(0)
@@ -1376,7 +1376,7 @@ extension OTPConsumer: ComponentSocketDelegate {
                         }
                                                         
                         // joins newly discovered systems which are observed
-                        refreshSystemSubscription()
+                        Self.socketDelegateQueue.async { refreshSystemSubscription() }
                         
                         // notify the debug delegate
                         delegateQueue.async { self.debugDelegate?.debugLog("Received system advertisement message from \(otpLayer.componentName) \(otpLayer.cid)") }
