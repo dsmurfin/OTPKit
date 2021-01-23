@@ -1414,12 +1414,12 @@ extension OTPProducer: ComponentSocketDelegate {
                         } else {
                             switch consumer.ipMode {
                             case .ipv4Only:
-                                // allow any ip mode to be processed
-                                break
+                                if ipFamily == .IPv6 {
+                                    updateHostnames(withHostname: hostname, ipFamily: ipFamily, forConsumer: consumer)
+                                }
                             case .ipv6Only, .ipv4And6:
                                 // only allow IPv6 messages to be processed
                                 guard ipFamily == .IPv6 else {
-                                    // update any hostnames and ip families
                                     updateHostnames(withHostname: hostname, ipFamily: ipFamily, forConsumer: consumer)
                                     return
                                 }
