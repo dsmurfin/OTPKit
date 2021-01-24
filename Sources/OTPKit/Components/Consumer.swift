@@ -1218,7 +1218,7 @@ extension OTPConsumer: ComponentSocketDelegate {
                         switch producer.ipMode {
                         case .ipv4Only:
                             if ipFamily == .IPv6 {
-                                updateHostnames(withHostname: hostname, ipFamily: ipFamily, forConsumer: consumer)
+                                updateHostnames(withHostname: hostname, ipFamily: ipFamily, forProducer: producer)
                             }
                         case .ipv6Only, .ipv4And6:
                             // only allow IPv6 messages to be processed
