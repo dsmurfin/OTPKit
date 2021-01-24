@@ -216,7 +216,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
         do {
             switch socketType {
             case .unicast:
-                try socket?.sendIPv4Multicast(onInterface: interface)
+                // try socket?.sendIPv4Multicast(onInterface: interface)
                 try socket?.sendIPv6Multicast(onInterface: interface)
             case .multicastv4, .multicastv6:
                 break
