@@ -1300,8 +1300,10 @@ private extension OTPProducer {
             }
             
             // increment the folio number for this system
-            Self.queue.sync(flags: .barrier) {
-                self.transformFolios[Int(systemNumber)] &+= 1
+            if !messages.isEmpty {
+                Self.queue.sync(flags: .barrier) {
+                    self.transformFolios[Int(systemNumber)] &+= 1
+                }
             }
             
             // append any messages for this system
