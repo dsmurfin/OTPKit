@@ -212,6 +212,19 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
             throw ComponentSocketError.couldNotBind(message: "\(cid): Could not bind socket of type \(socketType).")
         }
         
+        // attempt to set the interface multicast should be sent on
+        do {
+            switch socketType {
+            case .unicast:
+                try socket?.sendIPv4Multicast(onInterface: interface)
+                try socket?.sendIPv6Multicast(onInterface: interface)
+            case .multicastv4, .multicastv6:
+                break
+            }
+        } catch {
+            throw ComponentSocketError.couldNotAssignMulticastInterface(message: "\(cid): Could not assign interface(s) for sending multicast on \(socketType.rawValue) socket.")
+        }
+        
         // attempt to start receiving
         do {
             try socket?.beginReceiving()
@@ -392,6 +405,9 @@ public enum ComponentSocketError: LocalizedError {
     /// It was not possible to bind to a port/interface.
     case couldNotBind(message: String)
     
+    /// It was not possible to assign the interface on which to send multicast.
+    case couldNotAssignMulticastInterface(message: String)
+    
     /// It was not possible to start receiving data, e.g. because no bind occured first.
     case couldNotReceive(message: String)
 
@@ -406,7 +422,7 @@ public enum ComponentSocketError: LocalizedError {
             return "Could not join multicast group \(multicastGroup)"
         case let .couldNotLeave(multicastGroup):
             return "Could not leave multicast group \(multicastGroup)"
-        case let .couldNotBind(message), let .couldNotReceive(message):
+        case let .couldNotBind(message), let .couldNotReceive(message), let .couldNotAssignMulticastInterface(message):
             return message
         }
     }
