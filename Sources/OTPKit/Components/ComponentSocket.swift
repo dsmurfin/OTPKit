@@ -33,16 +33,16 @@ import Network
  
 */
 
-enum ComponentSocketType {
+enum ComponentSocketType: String {
     
     /// Used for unicast communications (advertisement responses and transmitting to multicast)
-    case unicast
+    case unicast = "Unicast"
     
     /// Used for IPv4 multicast communications (receiving advertisement and transform messages)
-    case multicastv4
+    case multicastv4 = "Multicast IPv4"
     
     /// Used for IPv6 multicast communications (receiving advertisement and transform messages)
-    case multicastv6
+    case multicastv6 = "Multicast IPv6"
     
 }
 
@@ -254,6 +254,24 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
         socket?.send(data, toHost: host, port: port, withTimeout: 0, tag: 0)
     }
     
+    /**
+     Safely accesses the type of this socket and returns a string.
+     
+     - Returns: A string representing the type of this socket.
+     
+     */
+    private func socketTypeString() -> String {
+        var socketType = ComponentSocketType.unicast.rawValue
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        DispatchQueue.main.async {
+            socketType = self.socketType.rawValue
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return socketType
+    }
+    
     // MARK: - GCD Async UDP Socket Delegate
     
     /**
@@ -269,7 +287,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didSendDataWithTag tag: Int) {
         
         // notify the delegate
-        delegate?.debugSocketLog("Socket \(sock) did send data")
+        delegate?.debugSocketLog("\(socketTypeString()) socket did send data")
 
     }
     
@@ -279,7 +297,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
     public func udpSocket(_ sock: GCDAsyncUdpSocket, didNotSendDataWithTag tag: Int, dueToError error: Error?) {
         
         // notify the delegate
-        delegate?.debugSocketLog("Socket \(sock) did not send data due to error \(String(describing: error?.localizedDescription))")
+        delegate?.debugSocketLog("\(socketTypeString()) socket did not send data due to error \(String(describing: error?.localizedDescription))")
         
     }
     
@@ -307,7 +325,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
     public func udpSocketDidClose(_ sock: GCDAsyncUdpSocket, withError error: Error?) {
         
         // notify the delegate
-        delegate?.debugSocketLog("Socket \(sock) did close, with error \(String(describing: error?.localizedDescription))")
+        delegate?.debugSocketLog("\(socketTypeString()) socket did close, with error \(String(describing: error?.localizedDescription))")
         
     }
     
