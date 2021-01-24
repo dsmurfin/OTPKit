@@ -264,7 +264,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
 
     */
     func send(message data: Data, host: Hostname, port: UDPPort) {
-        socket?.send(data, toHost: host, port: port, withTimeout: 0, tag: 0)
+        socket?.send(data, toHost: host, port: port, withTimeout: -1, tag: 0)
     }
     
     /**
