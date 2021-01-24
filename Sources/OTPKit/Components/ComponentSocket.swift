@@ -36,13 +36,13 @@ import Network
 enum ComponentSocketType: String {
     
     /// Used for unicast communications (advertisement responses and transmitting to multicast)
-    case unicast = "Unicast"
+    case unicast = "unicast"
     
     /// Used for IPv4 multicast communications (receiving advertisement and transform messages)
-    case multicastv4 = "Multicast IPv4"
+    case multicastv4 = "multicast V4"
     
     /// Used for IPv6 multicast communications (receiving advertisement and transform messages)
-    case multicastv6 = "Multicast IPv6"
+    case multicastv6 = "multicast V6"
     
 }
 
@@ -209,7 +209,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
                 
             }
         } catch {
-            throw ComponentSocketError.couldNotBind(message: "\(cid): Could not bind socket of type \(socketType).")
+            throw ComponentSocketError.couldNotBind(message: "\(cid): Could not bind \(socketType.rawValue) socket.")
         }
         
         // attempt to set the interface multicast should be sent on
@@ -229,7 +229,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
         do {
             try socket?.beginReceiving()
         } catch {
-            throw ComponentSocketError.couldNotReceive(message: "\(cid): Could not receive on socket of type \(socketType).")
+            throw ComponentSocketError.couldNotReceive(message: "\(cid): Could not receive on \(socketType.rawValue) socket.")
         }
         
         // join multicast groups
@@ -278,7 +278,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
         let semaphore = DispatchSemaphore(value: 0)
         
         DispatchQueue.main.async {
-            socketType = self.socketType.rawValue
+            socketType = self.socketType.rawValue.capitalized
             semaphore.signal()
         }
         semaphore.wait()
