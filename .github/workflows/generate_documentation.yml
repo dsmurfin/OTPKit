@@ -19,8 +19,8 @@ jobs:
         uses: SwiftDocOrg/swift-doc@master
         with:
           inputs: "Sources"
-          module-name: OTPKit
           format: html
+          module-name: OTPKit
           output: "docs"
       - name: Upload Documentation to Wiki
         uses: SwiftDocOrg/github-wiki-publish-action@v1
