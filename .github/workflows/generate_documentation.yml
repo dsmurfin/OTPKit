@@ -15,6 +15,13 @@ jobs:
           inputs: "Sources"
           module-name: OTPKit
           output: "Documentation/CommonMark"
+      - name: Generate HTML Documentation
+        uses: SwiftDocOrg/swift-doc@master
+        with:
+          inputs: "Sources"
+          module-name: OTPKit
+          format: html
+          output: "docs"
       - name: Upload Documentation to Wiki
         uses: SwiftDocOrg/github-wiki-publish-action@v1
         with:
