@@ -23,8 +23,7 @@ macOS 10.14+, iOS 10+
 
 To add the package dependency to your Xcode project, select File > Swift Packages > Add Package Dependency and enter the repository URL:
 
-``` "https://github.com/dsmurfin/OTPKit"
-```
+https://github.com/dsmurfin/OTPKit
 
 #### Swift Package Manager
 
@@ -93,7 +92,7 @@ do {
     // add this module to all points with this address
     producer.addModule(module, toPoint: address)
 
-} catch let error as? OTPPointValidationError {
+} catch let error as OTPPointValidationError {
     
     // handle error
     print(error.logDescription)
