@@ -57,7 +57,7 @@ public struct OTPModuleReferenceFrame: OTPModule, Hashable {
     public static let identifier: OTPModuleIdentifier = OTPModuleIdentifier(manufacturerID: ModuleLayer.ManufacturerID.esta.rawValue, moduleNumber: ModuleLayer.StandardModuleNumber.referenceFrame.rawValue)
 
     /// The size of the module's data in bytes.
-    public static let dataLength: OTPPDULength = 8
+    public static let dataLength: OTPPDULength = 7
     
     /// The total size of the module in bytes, including identifiers and length.
     public static let moduleLength: OTPPDULength = dataLength + OTPPDULength(ModuleLayer.Offset.data.rawValue)
