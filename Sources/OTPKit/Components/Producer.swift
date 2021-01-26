@@ -118,6 +118,9 @@ final public class OTPProducer: Component {
     
     // MARK: Socket
     
+    /// The interface for communications.
+    let interface: String
+    
     /// The socket used for unicast communications.
     let unicastSocket: ComponentSocket
     
@@ -282,6 +285,7 @@ final public class OTPProducer: Component {
         self.name = name
         self.ipMode = ipMode
         self.nameData = name.data(paddedTo: ComponentName.maxComponentNameBytes)
+        self.interface = interface
         self.unicastSocket = ComponentSocket(cid: cid, type: .unicast, interface: interface, delegateQueue: Self.socketDelegateQueue)
         self.multicast4Socket = ipMode.usesIPv4() ? ComponentSocket(cid: cid, type: .multicastv4, port: UDP.otpPort, interface: interface, delegateQueue: Self.socketDelegateQueue) : nil
         self.multicast6Socket = ipMode.usesIPv6() ? ComponentSocket(cid: cid, type: .multicastv6, port: UDP.otpPort, interface: interface, delegateQueue: Self.socketDelegateQueue) : nil
@@ -1560,7 +1564,8 @@ extension OTPProducer: ComponentSocketDelegate {
                         guard response == nil else { return }
                         
                         // send any name advertisement messages after a random amount of time
-                        sendDelayedNameAdvertisementMessage(to: hostname, port: port)
+                        let fullHostname = ipFamily == .IPv4 ? hostname : "\(hostname)%\(interface)"
+                        sendDelayedNameAdvertisementMessage(to: fullHostname, port: port)
                                                 
                         // update or add this consumer
                         if let index = consumers.firstIndex(where: { $0.cid == otpLayer.cid }) {
@@ -1630,7 +1635,8 @@ extension OTPProducer: ComponentSocketDelegate {
                         guard response == nil else { return }
                         
                         // send a system advertisement message after a random amount of time
-                        sendDelayedSystemAdvertisementMessage(to: hostname, port: port)
+                        let fullHostname = ipFamily == .IPv4 ? hostname : "\(hostname)%\(interface)"
+                        sendDelayedSystemAdvertisementMessage(to: fullHostname, port: port)
                                                 
                         // update or add this consumer
                         if let index = consumers.firstIndex(where: { $0.cid == otpLayer.cid }) {

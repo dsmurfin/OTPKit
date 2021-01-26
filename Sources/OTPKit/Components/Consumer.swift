@@ -99,6 +99,9 @@ final public class OTPConsumer: Component {
     
     // MARK: Socket
     
+    /// The interface for communications.
+    let interface: String
+    
     /// The socket used for unicast communications.
     let unicastSocket: ComponentSocket
     
@@ -256,6 +259,7 @@ final public class OTPConsumer: Component {
         self.name = name
         self.ipMode = ipMode
         self.nameData = name.data(paddedTo: ComponentName.maxComponentNameBytes)
+        self.interface = interface
         self.unicastSocket = ComponentSocket(cid: cid, type: .unicast, interface: interface, delegateQueue: Self.socketDelegateQueue)
         self.multicast4Socket = ipMode.usesIPv4() ? ComponentSocket(cid: cid, type: .multicastv4, port: UDP.otpPort, interface: interface, delegateQueue: Self.socketDelegateQueue) : nil
         self.multicast6Socket = ipMode.usesIPv6() ? ComponentSocket(cid: cid, type: .multicastv6, port: UDP.otpPort, interface: interface, delegateQueue: Self.socketDelegateQueue) : nil

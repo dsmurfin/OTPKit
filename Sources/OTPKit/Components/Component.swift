@@ -81,6 +81,9 @@ protocol Component: class {
     
     // MARK: Socket
     
+    /// The interface for communications.
+    var interface: String { get }
+    
     /// The socket used for unicast communications.
     var unicastSocket: ComponentSocket { get }
     
