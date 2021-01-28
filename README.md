@@ -1,8 +1,8 @@
 # OTPKit
 
-A Swift Package (SPM) implementation of BSR E1.59 - 20XX Entertainment Technology Object Transform Protocol (OTP).
+A Swift Package (SPM) implementation of ANSI E1.59 - 2021, Entertainment Technology - Object Transform Protocol (OTP).
 
-Provides complete protocol implementations of OTP Producer and Consumer components using IPv4/6.
+Provides complete protocol implementations of OTP Producer and Consumer components using IPv4/6 (OTP-4, OTP-6, OTP-4/6).
 
 Current revision: Document Number: CP/2018-1034r4 (not yet published for review).
 
@@ -146,7 +146,7 @@ consumer.setConsumerDelegate(self)
 
 ## Deployment
 
-This package should not be used for deployment to a live system. It is provided solely for testing and evaluation.
+This package is ready for deployment in live systems. It may also be used for testing and evaluation.
 
 ## Versioning
 
