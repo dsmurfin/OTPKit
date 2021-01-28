@@ -1036,7 +1036,7 @@ final public class OTPConsumer: Component {
             } else if newSystemNumbers.contains(systemNumber) && !existingSystemNumbers.contains(systemNumber) {
                 
                 // notify the debug delegate
-                delegateQueue.async { self.debugDelegate?.debugLog("Attempting multicast join for \(systemNumber)") }
+                delegateQueue.async { self.debugDelegate?.debugLog("Attempting multicast join for System \(systemNumber)") }
                 
                 // the new contains this number, but the existing does not
                 // try to join the multicast group
