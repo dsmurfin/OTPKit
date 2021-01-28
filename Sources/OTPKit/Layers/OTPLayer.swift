@@ -91,10 +91,10 @@ struct OTPLayer {
     enum Vector: PDUVector {
         
         /// Contains a  `TransformLayer`.
-        case transformMessage = 0xFF01
+        case transformMessage = 0x0001
         
         /// Contains a  `AdvertisementLayer`.
-        case advertisementMessage = 0xFF02
+        case advertisementMessage = 0x0002
         
     }
     
