@@ -4,9 +4,9 @@ A Swift Package (SPM) implementation of ANSI E1.59 - 2021, Entertainment Technol
 
 Provides complete protocol implementations of OTP Producer and Consumer components using IPv4/6 (OTP-4, OTP-6, OTP-4/6).
 
-Current revision: Document Number: CP/2018-1034r4 (not yet published for review).
+Current revision: Document Number: CP/2018-1034r5.
 
-**This package should not be used for deployment to a live system. It is provided solely for testing and evaluation.**
+[Download](https://tsp.esta.org/tsp/documents/published_docs.php) the full standard document.
 
 ## Getting Started
 
@@ -30,7 +30,7 @@ https://github.com/dsmurfin/OTPKit
 Simply add the package dependency to your Package.swift and depend on "OTPKit" in the necessary targets:
 
 ``` dependencies: [
-.package(url: "https://github.com/dsmurfin/OTPKit", from: "0.1.0")
+.package(url: "https://github.com/dsmurfin/OTPKit", from: "1.0.0")
 ]
 ```
 
