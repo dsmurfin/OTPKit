@@ -140,7 +140,7 @@ final public class OTPProducer: Component {
      
     */
     public func setProducerDelegate(_ delegate: OTPProducerDelegate?) {
-        Self.queue.sync(flags: .barrier) {
+        delegateQueue.sync {
             self.producerDelegate = delegate
         }
     }
@@ -153,7 +153,7 @@ final public class OTPProducer: Component {
      
     */
     public func setProtocolErrorDelegate(_ delegate: OTPComponentProtocolErrorDelegate?) {
-        Self.queue.sync(flags: .barrier) {
+        delegateQueue.sync {
             self.protocolErrorDelegate = delegate
         }
     }
@@ -166,7 +166,7 @@ final public class OTPProducer: Component {
      
     */
     public func setDebugDelegate(_ delegate: OTPComponentDebugDelegate?) {
-        Self.queue.sync(flags: .barrier) {
+        delegateQueue.sync {
             self.debugDelegate = delegate
         }
     }

@@ -121,7 +121,7 @@ final public class OTPConsumer: Component {
      
     */
     public func setConsumerDelegate(_ delegate: OTPConsumerDelegate?) {
-        Self.queue.sync(flags: .barrier) {
+        delegateQueue.sync {
             self.consumerDelegate = delegate
         }
     }
@@ -134,7 +134,7 @@ final public class OTPConsumer: Component {
      
     */
     public func setProtocolErrorDelegate(_ delegate: OTPComponentProtocolErrorDelegate?) {
-        Self.queue.sync(flags: .barrier) {
+        delegateQueue.sync {
             self.protocolErrorDelegate = delegate
         }
     }
@@ -147,7 +147,7 @@ final public class OTPConsumer: Component {
      
     */
     public func setDebugDelegate(_ delegate: OTPComponentDebugDelegate?) {
-        Self.queue.sync(flags: .barrier) {
+        delegateQueue.sync {
             self.debugDelegate = delegate
         }
     }
