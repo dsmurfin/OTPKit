@@ -1417,6 +1417,13 @@ extension OTPProducer: ComponentSocketDelegate {
                         if consumer.notifiedState == .offline, let index = self.consumers.firstIndex(where: { $0.cid == otpLayer.cid }) {
                             // this consumer had gone offline, so start allowing messages from another IP family
                             self.consumers[index].ipMode = newComponentIPMode
+                            
+                            // reset folio and page numbers
+                            self.consumers[index].systemAdvertisementFolio = nil
+                            self.consumers[index].nameAdvertisementFolio = nil
+                            self.consumers[index].nameAdvertisementPage = nil
+                            self.consumers[index].moduleAdvertisementFolio = nil
+                            self.consumers[index].moduleAdvertisementPage = nil
                         } else {
                             switch consumer.ipMode {
                             case .ipv4Only:

@@ -1218,6 +1218,12 @@ extension OTPConsumer: ComponentSocketDelegate {
                     if producer.notifiedState == .offline, let index = self.producers.firstIndex(where: { $0.cid == otpLayer.cid }) {
                         // this producer had gone offline, so start allowing messages from another IP family
                         self.producers[index].ipMode = newComponentIPMode
+                        
+                        // reset folio and page numbers
+                        self.producers[index].systemAdvertisementFolio = nil
+                        self.producers[index].nameAdvertisementFolio = nil
+                        self.producers[index].nameAdvertisementPage = nil
+                        self.producers[index].systemTransformFolios = []
                     } else {
                         switch producer.ipMode {
                         case .ipv4Only:
