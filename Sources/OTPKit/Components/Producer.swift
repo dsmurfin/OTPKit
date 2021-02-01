@@ -1436,8 +1436,8 @@ extension OTPProducer: ComponentSocketDelegate {
                     switch advertisementLayer.vector {
                     case .module:
                           
-                        // if a previous message of this type has been received, it must be within the valid range
-                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.moduleAdvertisementFolio, let previousPage = consumer.moduleAdvertisementPage {
+                        // if a previous message of this type has been received, it must be within the valid range (always continue if the consumer had previously gone offline)
+                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), consumer.notifiedState != .offline, let previousFolio = consumer.moduleAdvertisementFolio, let previousPage = consumer.moduleAdvertisementPage {
                             guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
                         }
                         
@@ -1552,8 +1552,8 @@ extension OTPProducer: ComponentSocketDelegate {
                                                 
                     case .name:
                         
-                        // if a previous message of this type has been received, it must be within the valid range
-                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.nameAdvertisementFolio, let previousPage = consumer.nameAdvertisementPage {
+                        // if a previous message of this type has been received, it must be within the valid range (always continue if the consumer had previously gone offline)
+                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), consumer.notifiedState != .offline, let previousFolio = consumer.nameAdvertisementFolio, let previousPage = consumer.nameAdvertisementPage {
                             guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
                         }
 
@@ -1623,8 +1623,8 @@ extension OTPProducer: ComponentSocketDelegate {
                         
                     case .system:
                         
-                        // if a previous message of this type has been received, it must be within the valid range
-                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = consumer.systemAdvertisementFolio {
+                        // if a previous message of this type has been received, it must be within the valid range (always continue if the consumer had previously gone offline)
+                        if let consumer = consumers.first(where: { $0.cid == otpLayer.cid }), consumer.notifiedState != .offline, let previousFolio = consumer.systemAdvertisementFolio {
                             guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio) else { throw OTPLayerValidationError.folioOutOfRange(consumer.cid) }
                         }
 

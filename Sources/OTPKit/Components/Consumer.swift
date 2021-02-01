@@ -1246,8 +1246,8 @@ extension OTPConsumer: ComponentSocketDelegate {
                         break
                     case .name:
                         
-                        // if a previous message of this type has been received, it must be within the valid range
-                        if let producer = producers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = producer.nameAdvertisementFolio, let previousPage = producer.nameAdvertisementPage {
+                        // if a previous message of this type has been received, it must be within the valid range (always continue if the producer had previously gone offline)
+                        if let producer = producers.first(where: { $0.cid == otpLayer.cid }), producer.notifiedState != .offline,  let previousFolio = producer.nameAdvertisementFolio, let previousPage = producer.nameAdvertisementPage {
                             guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio, previousPage: previousPage) else { throw OTPLayerValidationError.folioOutOfRange(producer.cid) }
                         }
 
@@ -1313,8 +1313,8 @@ extension OTPConsumer: ComponentSocketDelegate {
                             
                     case .system:
 
-                        // if a previous message of this type has been received, it must be within the valid range
-                        if let producer = producers.first(where: { $0.cid == otpLayer.cid }), let previousFolio = producer.systemAdvertisementFolio {
+                        // if a previous message of this type has been received, it must be within the valid range (always continue if the producer had previously gone offline)
+                        if let producer = producers.first(where: { $0.cid == otpLayer.cid }), producer.notifiedState != .offline, let previousFolio = producer.systemAdvertisementFolio {
                             guard otpLayer.isPartOfCurrentCommunication(previousFolio: previousFolio) else { throw OTPLayerValidationError.folioOutOfRange(producer.cid) }
                         }
                         
