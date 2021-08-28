@@ -57,7 +57,7 @@ extension ComponentName {
 
 */
 
-protocol Component: class {
+protocol Component: AnyObject {
     
     /// The dispatch queue used for read/write operations.
     static var queue: DispatchQueue { get }

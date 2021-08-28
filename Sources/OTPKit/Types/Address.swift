@@ -43,7 +43,7 @@ typealias SystemNumber = OTPSystemNumber
 extension SystemNumber {
     
     /// The size of a `SystemNumber` in bytes.
-    static let sizeOfSystemNumber = 1
+    static let sizeOfSystemNumber = MemoryLayout<Self>.size
     
     /// The minimum permitted value for `SystemNumber`.
     static let minSystemNumber: SystemNumber = 1

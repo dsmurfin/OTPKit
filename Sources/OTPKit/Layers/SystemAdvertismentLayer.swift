@@ -38,9 +38,6 @@ struct SystemAdvertismentLayer {
     
     /// The maximum number of `SystemNumber`s that can be included in a single message.
     static let maxMessageSystemNumbers = 200
-    
-    /// The size in memory of a `SystemNumber`.
-    static let sizeOfSystemNumber = MemoryLayout<SystemNumber>.size
 
     /**
      System Advertisement Layer Vectors
@@ -184,11 +181,11 @@ struct SystemAdvertismentLayer {
             let systemNumberData = data.subdata(in: Offset.systemNumbers.rawValue..<data.count)
                         
             // the remaining data should be a multiple of system number's size containing at least 1 system number
-            guard systemNumberData.count >= sizeOfSystemNumber && systemNumberData.count.isMultiple(of: sizeOfSystemNumber) else { throw ModuleAdvertisementLayerValidationError.invalidModuleIdentifiers }
+            guard systemNumberData.count >= SystemNumber.sizeOfSystemNumber && systemNumberData.count.isMultiple(of: SystemNumber.sizeOfSystemNumber) else { throw SystemAdvertisementLayerValidationError.invalidSystemNumbers }
             
             // loop through all remaining data and get system numbers
             var systemNumbers = [SystemNumber]()
-            for offset in stride(from: 0, to: systemNumberData.count, by: sizeOfSystemNumber) {
+            for offset in stride(from: 0, to: systemNumberData.count, by: SystemNumber.sizeOfSystemNumber) {
                 
                 // try to get a system number and append it
                 guard let systemNumber: SystemNumber = systemNumberData.toUInt8(atOffset: offset) else { continue }

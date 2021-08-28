@@ -356,7 +356,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
 
 */
 
-protocol ComponentSocketDelegate: class {
+protocol ComponentSocketDelegate: AnyObject {
     
     /**
      Called when a message has been received.
