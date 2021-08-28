@@ -27,7 +27,7 @@ import Foundation
 /**
  A type used for the priority component of an`OTPPoint` or `Point`.
  
- Valid numbers are in the range 1 (low) - 200 (high).
+ Valid numbers are in the range 0 (low) - 200 (high).
 
 */
 typealias Priority = UInt8
@@ -53,7 +53,7 @@ extension Priority {
     /**
      Determines whether this Priority is valid.
 
-     - Throws: `PointValidationError.invalidPriority` if less than 1 or greater than 200.
+     - Throws: `PointValidationError.invalidPriority` if less than 0 or greater than 200.
      
     */
     func validPriority() throws {
@@ -571,7 +571,7 @@ public enum OTPPointValidationError: LocalizedError {
     /// The system number is out-of-range.
     case invalidSystemNumber
     
-    /// The point number is out-of-range.
+    /// The priority is out-of-range.
     case invalidPriority
     
     /// A point already exists with this `OTPAddress` and `Priority`.

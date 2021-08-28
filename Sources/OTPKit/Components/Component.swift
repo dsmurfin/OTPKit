@@ -40,7 +40,7 @@ typealias ComponentName = String
 
 extension ComponentName {
     
-    /// The maximum size of a `PointName` in bytes.
+    /// The maximum size of a `ComponentName` in bytes.
     static let maxComponentNameBytes: Int = 32
     
 }

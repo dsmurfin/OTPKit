@@ -44,7 +44,7 @@ struct TransformLayer {
     */
     enum Vector: PDUVector {
         
-        /// Contains a  `TransformLayer`.
+        /// Contains a  `PointLayer`.
         case point = 0x0001
         
     }
@@ -304,7 +304,7 @@ struct TransformLayer {
 }
 
 /**
- OTP Layer Validation Error
+ Transform Layer Validation Error
  
  Enumerates all possible `TransformLayer` parsing errors.
  

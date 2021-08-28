@@ -220,7 +220,7 @@ struct SystemAdvertismentLayer {
 /**
  System Advertisement Layer Validation Error
  
- Enumerates all possible `NameAdvertisementLayer` parsing errors.
+ Enumerates all possible `SystemAdvertisementLayer` parsing errors.
  
 */
 
