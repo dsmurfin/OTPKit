@@ -755,13 +755,15 @@ final public class OTPProducer: Component {
     /**
      Resets the transform message folio numbers of one or more System Numbers for this Producer.
      
+     If no System Numbers are provided, folio numbers will be reset for all System Numbers.
+     
      This should only be used by test applications for the purpose of testing Consumer implementations.
      
      - Parameters:
         - systemNumbers: Optional: An optional array of System Numbers to be reset.
      
      */
-    func testOnlyResetTransformFolioNumbers(for systemNumbers: [SystemNumber]? = nil) {
+    public func testOnlyResetTransformFolioNumbers(for systemNumbers: [SystemNumber]? = nil) {
         Self.queue.sync(flags: .barrier) {
             if let systemNumbers = systemNumbers {
                 transformFolios = transformFolios.enumerated().map { systemNumbers.contains(UInt8($0.offset)+1) ? FolioNumber.min : $0.element }
