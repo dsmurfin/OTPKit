@@ -763,7 +763,7 @@ final public class OTPProducer: Component {
         - systemNumbers: Optional: An optional array of System Numbers to be reset.
      
      */
-    public func testOnlyResetTransformFolioNumbers(for systemNumbers: [SystemNumber]? = nil) {
+    public func testOnlyResetTransformFolioNumbers(for systemNumbers: [OTPSystemNumber]? = nil) {
         Self.queue.sync(flags: .barrier) {
             if let systemNumbers = systemNumbers {
                 transformFolios = transformFolios.enumerated().map { systemNumbers.contains(UInt8($0.offset)+1) ? FolioNumber.min : $0.element }
