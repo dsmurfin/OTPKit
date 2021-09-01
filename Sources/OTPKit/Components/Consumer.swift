@@ -701,7 +701,7 @@ final public class OTPConsumer: Component {
         // get the producer index
         guard let prodIndex = producers.firstIndex(where: { $0 == producer }) else { return }
         
-        let systemNumberIndex = Int(systemNumber)
+        let systemNumberIndex = Int(systemNumber) - 1
 
         // decide whether to store this folio/page
         
