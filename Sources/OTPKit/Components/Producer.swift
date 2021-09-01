@@ -771,7 +771,7 @@ final public class OTPProducer: Component {
                 transformFolios = transformFolios.map { _ in FolioNumber.min }
             }
             
-            self.delegateQueue.async { self.debugDelegate?.debugLog("Reset \(systemNumbers?.count ?? Int(SystemNumber.max)) transform message folio numbers to \(FolioNumber.min)") }
+            self.delegateQueue.async { self.debugDelegate?.debugLog("Reset \(systemNumbers?.count ?? Int(SystemNumber.maxSystemNumber)) transform message folio numbers to \(FolioNumber.min)") }
         }
     }
 
