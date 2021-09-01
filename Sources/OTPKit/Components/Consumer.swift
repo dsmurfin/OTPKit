@@ -1223,7 +1223,7 @@ extension OTPConsumer: ComponentSocketDelegate {
                         self.producers[index].systemAdvertisementFolio = nil
                         self.producers[index].nameAdvertisementFolio = nil
                         self.producers[index].nameAdvertisementPage = nil
-                        self.producers[index].systemTransformFolios = []
+                        self.producers[index].systemTransformFolios = (SystemNumber.minSystemNumber...SystemNumber.maxSystemNumber).map { (systemNumber: $0, folios: []) }
                     } else {
                         switch producer.ipMode {
                         case .ipv4Only:
