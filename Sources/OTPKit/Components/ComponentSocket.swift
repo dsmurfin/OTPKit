@@ -86,8 +86,9 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
     /// The dispatch queue on which the socket sends and receives messages.
     private var socketQueue: DispatchQueue
     
-    /// The interface on which to bind this socket.
-    private var interface: String
+    /// An optional interface on which to bind this socket.
+    /// This must not be `nil` for IPv6.
+    private var interface: String?
     
     /// The UDP port on which to bind this socket.
     private var port: UInt16
@@ -103,11 +104,11 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
      - Parameter cid: The CID of this Producer.
      - Parameter type: The type of socket (unicast, multicast IPV4, multicast IPv6).
      - Parameter port: Optional: UDP port to bind.
-     - Parameter interface: The interface on which to bind the socket. It may be a name (e.g. "en1" or "lo0") or the corresponding IP address (e.g. "192.168.4.35").
+     - Parameter interface: An optional interface on which to bind the socket. It may be a name (e.g. "en1" or "lo0") or the corresponding IP address (e.g. "192.168.4.35").
      - Parameter delegateQueue: The dispatch queue on which to receive delegate calls from this Producer.
 
     */
-    init(cid: CID, type: ComponentSocketType, port: UDPPort = 0, interface: String, delegateQueue: DispatchQueue) {
+    init(cid: CID, type: ComponentSocketType, port: UDPPort = 0, interface: String?, delegateQueue: DispatchQueue) {
         self.cid = cid
         self.socketType = type
         self.port = port
@@ -198,14 +199,14 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
                 try socket?.bind(toPort: port, interface: interface)
 
                 // notify the delegate
-                delegate?.debugSocketLog("Successfully bound unicast to port: \(socket?.localPort() ?? 0) on interface: \(interface)")
+                delegate?.debugSocketLog("Successfully bound unicast to port: \(socket?.localPort() ?? 0) on interface: \(interface ?? "default")")
                 
             case .multicastv4, .multicastv6:
                 
                 try socket?.bind(toPort: port)
                 
                 // notify the delegate
-                delegate?.debugSocketLog("Successfully bound multicast to port: \(port) on interface: \(interface)")
+                delegate?.debugSocketLog("Successfully bound multicast to port: \(port) on interface: \(interface ?? "default")")
                 
             }
         } catch {
@@ -219,7 +220,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
 //                if multicastGroups.contains(where: { IPv4Address($0) != nil }) {
 //                    try socket?.sendIPv4Multicast(onInterface: interface)
 //                }
-                if multicastGroups.contains(where: { IPv6Address($0) != nil }) {
+                if multicastGroups.contains(where: { IPv6Address($0) != nil }), let interface = interface {
                     try socket?.sendIPv6Multicast(onInterface: interface)
                 }
             case .multicastv4, .multicastv6:
