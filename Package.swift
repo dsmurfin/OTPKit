@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "OTPKit",
     platforms: [
-        .iOS(.v10),
+        .iOS(.v12),
         .macOS(.v10_14),
     ],
     products: [
