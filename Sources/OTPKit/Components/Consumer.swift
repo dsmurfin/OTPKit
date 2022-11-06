@@ -99,8 +99,9 @@ final public class OTPConsumer: Component {
     
     // MARK: Socket
     
-    /// The interface for communications.
-    let interface: String
+    /// An optional interface for communications.
+    /// This can only be `nil` if `OTPIPMode` is `.ipv4Only`.
+    public let interface: String?
     
     /// The socket used for unicast communications.
     let unicastSocket: ComponentSocket
@@ -250,10 +251,13 @@ final public class OTPConsumer: Component {
         - systemNumbers: An array of System Numbers this Consumer should observe.
         - delegateQueue: A delegate queue on which to receive delegate calls from this Consumer.
         - delegateInterval: The minimum interval between `ConsumerDelegate` notifications (values permitted 1-10000ms).
+     
+     - Precondition: If `ipMode` is `ipv6only` or `ipv4And6`, interface must not be nil.
 
     */
-    public init(name: String, cid: UUID = UUID(), ipMode: OTPIPMode = .ipv4Only, interface: String, moduleTypes: [OTPModule.Type], observedSystems: [OTPSystemNumber], delegateQueue: DispatchQueue, delegateInterval: Int) {
-        
+    public init(name: String, cid: UUID = UUID(), ipMode: OTPIPMode = .ipv4Only, interface: String?, moduleTypes: [OTPModule.Type], observedSystems: [OTPSystemNumber], delegateQueue: DispatchQueue, delegateInterval: Int) {
+        precondition(!ipMode.usesIPv6() || interface != nil, "An interface must be provided for IPv6.")
+
         // initialize
         self.cid = cid
         self.name = name

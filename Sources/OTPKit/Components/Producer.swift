@@ -118,8 +118,9 @@ final public class OTPProducer: Component {
     
     // MARK: Socket
     
-    /// The interface for communications.
-    let interface: String
+    /// An optional interface for communications.
+    /// This can only be `nil` if `OTPIPMode` is `.ipv4Only`.
+    public let interface: String?
     
     /// The socket used for unicast communications.
     let unicastSocket: ComponentSocket
@@ -278,9 +279,13 @@ final public class OTPProducer: Component {
         - priority: Optional: Default Priority for this Producer, used when Points do not have explicit priorities (values permitted 0-200).
         - interval: Optional: Interval for Transform Messages from this Producer (values permitted 1-50ms).
         - delegateQueue: A delegate queue on which to receive delegate calls from this Producer.
+     
+     - Precondition: If `ipMode` is `ipv6only` or `ipv4And6`, interface must not be nil.
 
     */
-    public init(name: String, cid: UUID = UUID(), ipMode: OTPIPMode = .ipv4Only, interface: String, priority: UInt8 = 100, interval: Int = 50, delegateQueue: DispatchQueue) {
+    public init(name: String, cid: UUID = UUID(), ipMode: OTPIPMode = .ipv4Only, interface: String?, priority: UInt8 = 100, interval: Int = 50, delegateQueue: DispatchQueue) {
+        precondition(!ipMode.usesIPv6() || interface != nil, "An interface must be provided for IPv6.")
+        
         self.cid = cid
         self.name = name
         self.ipMode = ipMode
@@ -1596,7 +1601,7 @@ extension OTPProducer: ComponentSocketDelegate {
                         guard response == nil else { return }
                         
                         // send any name advertisement messages after a random amount of time
-                        let fullHostname = ipFamily == .IPv4 ? hostname : "\(hostname)%\(interface)"
+                        let fullHostname = ipFamily == .IPv4 ? hostname : "\(hostname)%\(interface ?? "default")"
                         sendDelayedNameAdvertisementMessage(to: fullHostname, port: port)
                                                 
                         // update or add this consumer
@@ -1667,7 +1672,7 @@ extension OTPProducer: ComponentSocketDelegate {
                         guard response == nil else { return }
                         
                         // send a system advertisement message after a random amount of time
-                        let fullHostname = ipFamily == .IPv4 ? hostname : "\(hostname)%\(interface)"
+                        let fullHostname = ipFamily == .IPv4 ? hostname : "\(hostname)%\(interface ?? "default")"
                         sendDelayedSystemAdvertisementMessage(to: fullHostname, port: port)
                                                 
                         // update or add this consumer
