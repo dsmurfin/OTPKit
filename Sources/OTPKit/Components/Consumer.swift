@@ -1609,7 +1609,7 @@ extension OTPConsumer: ComponentSocketDelegate {
     func socketDidClose(_ socket: ComponentSocket, withError error: Error?) {
         if self._isConnected != false {
             self._isConnected = false
-            delegateQueue.async { self.consumerDelegate?.disconnected(with: error) }
+            delegateQueue.async { self.consumerDelegate?.disconnected(self, with: error) }
         }
     }
     
@@ -1678,10 +1678,11 @@ public protocol OTPConsumerDelegate: AnyObject {
      Notifies the delegate that the consumer was disconnected
      
      - Parameters:
+        - consumer: The consumer which was disconnected.
         - error: An optional error that may have occured, for example if the network interface was removed.
 
     */
-    func disconnected(with error: Error?)
+    func disconnected(_ consumer: OTPConsumer, with error: Error?)
 
 }
 

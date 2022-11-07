@@ -1885,7 +1885,7 @@ extension OTPProducer: ComponentSocketDelegate {
     func socketDidClose(_ socket: ComponentSocket, withError error: Error?) {
         if self._isConnected != false {
             self._isConnected = false
-            delegateQueue.async { self.producerDelegate?.disconnected(with: error) }
+            delegateQueue.async { self.producerDelegate?.disconnected(self, with: error) }
         }
     }
     
@@ -1927,10 +1927,11 @@ public protocol OTPProducerDelegate: AnyObject {
      Notifies the delegate that the producer was disconnected
      
      - Parameters:
+        - producer: The producer which was disconnected.
         - error: An optional error that may have occured, for example if the network interface was removed.
 
     */
-    func disconnected(with error: Error?)
+    func disconnected(_ producer: OTPProducer, with error: Error?)
 
 }
 
