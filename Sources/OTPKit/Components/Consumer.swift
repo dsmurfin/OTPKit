@@ -111,6 +111,15 @@ final public class OTPConsumer: Component {
     
     /// The socket used for multicast IPv6 communications.
     let multicast6Socket: ComponentSocket?
+    
+    /// Whether the consumer is able to send/receive data (thread-safe).
+    public var isConnected: Bool {
+        get { Self.socketDelegateQueue.sync { _isConnected } }
+    }
+    
+    /// The private socket consumer send/receive status.
+    /// Should always be access on `socketDelegateQueue`.
+    private var _isConnected: Bool
 
     // MARK: Delegate
     
@@ -267,6 +276,7 @@ final public class OTPConsumer: Component {
         self.unicastSocket = ComponentSocket(cid: cid, type: .unicast, interface: interface, delegateQueue: Self.socketDelegateQueue)
         self.multicast4Socket = ipMode.usesIPv4() ? ComponentSocket(cid: cid, type: .multicastv4, port: UDP.otpPort, interface: interface, delegateQueue: Self.socketDelegateQueue) : nil
         self.multicast6Socket = ipMode.usesIPv6() ? ComponentSocket(cid: cid, type: .multicastv6, port: UDP.otpPort, interface: interface, delegateQueue: Self.socketDelegateQueue) : nil
+        self._isConnected = false
         self.delegateQueue = delegateQueue
         self.delegateInterval = max(1,min(10000, delegateInterval))
         self.observedSystemNumbers = observedSystems
@@ -328,6 +338,9 @@ final public class OTPConsumer: Component {
         try unicastSocket.startListening()
         try multicast4Socket?.startListening(multicastGroups: [IPv4.advertisementMessageHostname])
         try multicast6Socket?.startListening(multicastGroups: [IPv6.advertisementMessageHostname])
+        Self.socketDelegateQueue.sync {
+            self._isConnected = true
+        }
         
         // start advertising supported modules
         startModuleAdvertisement()
@@ -355,6 +368,8 @@ final public class OTPConsumer: Component {
         stopDelegateNotifications()
         
         // stops listening on all sockets
+        // when the first socket is closed,
+        // a notification will be sent to the delegate
         unicastSocket.stopListening()
         multicast4Socket?.stopListening()
         multicast6Socket?.stopListening()
@@ -1585,6 +1600,20 @@ extension OTPConsumer: ComponentSocketDelegate {
     }
     
     /**
+     Called when the socket is closed.
+     
+     - Parameters:
+        - error: An optional `Error` which may have occured.
+     
+     */
+    func socketDidClose(_ socket: ComponentSocket, withError error: Error?) {
+        if self._isConnected != false {
+            self._isConnected = false
+            delegateQueue.async { self.consumerDelegate?.disconnected(with: error) }
+        }
+    }
+    
+    /**
      Called when a debug socket log is produced.
      
      - Parameters:
@@ -1644,6 +1673,15 @@ public protocol OTPConsumerDelegate: AnyObject {
      
     */
     func discoveredSystemNumbers(_ systemNumbers: [OTPSystemNumber])
+    
+    /**
+     Notifies the delegate that the consumer was disconnected
+     
+     - Parameters:
+        - error: An optional error that may have occured, for example if the network interface was removed.
+
+    */
+    func disconnected(with error: Error?)
 
 }
 

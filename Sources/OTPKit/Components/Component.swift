@@ -93,6 +93,9 @@ protocol Component: AnyObject {
     /// The socket used for multicast IPv6 communications.
     var multicast6Socket: ComponentSocket? { get }
     
+    /// Whether the component is able to send/receive data.
+    var isConnected: Bool { get }
+    
     // MARK: Delegate
     
     /// The delegate which receives protocol error notifications from this component.

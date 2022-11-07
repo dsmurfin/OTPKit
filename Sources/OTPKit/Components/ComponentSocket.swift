@@ -343,6 +343,7 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
     public func udpSocketDidClose(_ sock: GCDAsyncUdpSocket, withError error: Error?) {
         
         // notify the delegate
+        delegate?.socketDidClose(self, withError: error)
         delegate?.debugSocketLog("\(socketTypeString()) socket did close, with error \(String(describing: error?.localizedDescription))")
         
     }
@@ -374,6 +375,15 @@ protocol ComponentSocketDelegate: AnyObject {
 
     */
     func receivedMessage(withData data: Data, sourceHostname: Hostname, sourcePort: UDPPort, ipFamily: ComponentSocketIPFamily)
+    
+    /**
+     Called when the socket is closed.
+     
+     - Parameters:
+        - error: An optional `Error` which may have occured.
+     
+     */
+    func socketDidClose(_ socket: ComponentSocket, withError error: Error?)
     
     /**
      Called when a debug socket log is produced.
