@@ -114,7 +114,7 @@ final public class OTPConsumer: Component {
     
     /// Whether the consumer is able to send/receive data (thread-safe).
     public var isConnected: Bool {
-        get { Self.socketDelegateQueue.sync { _isConnected } }
+        get { Self.queue.sync(flags: .barrier) { _isConnected } }
     }
     
     /// The private socket consumer send/receive status.
@@ -338,7 +338,7 @@ final public class OTPConsumer: Component {
         try unicastSocket.startListening()
         try multicast4Socket?.startListening(multicastGroups: [IPv4.advertisementMessageHostname])
         try multicast6Socket?.startListening(multicastGroups: [IPv6.advertisementMessageHostname])
-        Self.socketDelegateQueue.sync {
+        Self.queue.sync(flags: .barrier) {
             self._isConnected = true
         }
         
@@ -1607,9 +1607,11 @@ extension OTPConsumer: ComponentSocketDelegate {
      
      */
     func socketDidClose(_ socket: ComponentSocket, withError error: Error?) {
-        if self._isConnected != false {
-            self._isConnected = false
-            delegateQueue.async { self.consumerDelegate?.disconnected(self, with: error) }
+        Self.queue.sync(flags: .barrier) {
+            if self._isConnected != false {
+                self._isConnected = false
+                delegateQueue.async { self.consumerDelegate?.disconnected(self, with: error) }
+            }
         }
     }
     
