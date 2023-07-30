@@ -243,7 +243,12 @@ class ComponentSocket: NSObject, GCDAsyncUdpSocketDelegate {
             break
         case .multicastv4, .multicastv6:
             for group in multicastGroups {
-                try join(multicastGroup: group)
+                do {
+                    try join(multicastGroup: group)
+                } catch {
+                    socket?.close()
+                    throw error
+                }
             }
         }
 
